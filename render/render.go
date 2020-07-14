@@ -221,7 +221,7 @@ func (z *Renderer) initGradient(rgba color.RGBA) (ok bool) {
 		f - d*zBX - e*zBY,
 	}
 
-	return z.gradient.Init(Shape(shape),Spread(spread),pix2Grad,z.stops[:nStops])
+	return z.gradient.Init(Shape(shape), Spread(spread), pix2Grad, z.stops[:nStops])
 }
 
 func (z *Renderer) StartPath(adj uint8, x, y float32) {
