@@ -1,7 +1,13 @@
+// SPDX-License-Identifier: Unlicense OR MIT
+
 package clip
 
 import (
+	"fmt"
 	"image"
+	"image/color"
+	"image/draw"
+	"math"
 
 	"gioui.org/f32"
 	"gioui.org/op"
