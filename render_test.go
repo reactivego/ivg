@@ -98,7 +98,7 @@ var testdataTestCases = []struct {
 	{"testdata/video-005.primitive", ""},
 }
 
-func TestRasterizer(t *testing.T) {
+func TestRenderer(t *testing.T) {
 	for _, tc := range testdataTestCases {
 		ivgData, err := ioutil.ReadFile(filepath.FromSlash(tc.filename) + ".ivg")
 		if err != nil {
