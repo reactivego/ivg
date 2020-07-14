@@ -60,6 +60,6 @@ func (r *RasterizerLogger) ClosePath() {
 }
 
 func (rl *RasterizerLogger) Draw(r image.Rectangle, src image.Image, sp image.Point) {
-	fmt.Printf("raster.Draw(r: %#v, src: %#v, sp: %#v)\n", r, src.Bounds(), sp)
+	fmt.Printf("raster.Draw(r: %#v, src: <img>, sp: %#v)\n", r, sp)
 	rl.Rasterizer.Draw(r, src, sp)
 }
