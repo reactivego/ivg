@@ -3,6 +3,7 @@ package generate
 import (
 	"image/color"
 	"math"
+	"strconv"
 
 	"github.com/reactivego/ivg"
 )
@@ -14,6 +15,7 @@ func (e Error) Error() string { return string(e) }
 const (
 	CSELUsedAsBothGradientAndStop = Error("ivg: CSEL used as both gradient and stop")
 	TooManyGradientStops          = Error("ivg: too many gradient stops")
+	UnrecognizedPathDataVerb      = Error("ivg: unrecognized path data verb")
 )
 
 // Aff3 is a 3x3 affine transformation matrix in row major order, where the
@@ -158,5 +160,137 @@ func (d *Generator) SetGradient(shape GradientShape, spread GradientSpread, stop
 	}
 	d.SetCSel(oldCSel)
 	d.SetNSel(oldNSel)
+	return nil
+}
+
+func (e *Generator) SetPathData(d string, adj uint8, normalizeTo64X64 bool) error {
+	var args [7]float32
+	prevN, prevVerb := 0, byte(0)
+	for first := true; d != "z"; first = false {
+		n, verb, implicit := 0, d[0], false
+		switch d[0] {
+		case 'H', 'h', 'V', 'v':
+			n = 1
+		case 'L', 'M', 'l', 'm':
+			n = 2
+		case 'S', 's':
+			n = 4
+		case 'C', 'c':
+			n = 6
+		case 'A', 'a':
+			n = 7
+		case 'z':
+			n = 0
+		default:
+			if prevVerb == '\x00' {
+				return UnrecognizedPathDataVerb
+			}
+			n, verb, implicit = prevN, prevVerb, true
+		}
+		prevN, prevVerb = n, verb
+		if prevVerb == 'M' {
+			prevVerb = 'L'
+		} else if prevVerb == 'm' {
+			prevVerb = 'l'
+		}
+		if !implicit {
+			d = d[1:]
+		}
+
+		for i := 0; i < n; i++ {
+			nDots := 0
+			if d[0] == '.' {
+				nDots = 1
+			}
+			j := 1
+			for ; ; j++ {
+				switch d[j] {
+				case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+					continue
+				case '.':
+					nDots++
+					if nDots == 1 {
+						continue
+					}
+				}
+				break
+			}
+			f, err := strconv.ParseFloat(d[:j], 64)
+			if err != nil {
+				return err
+			}
+			args[i] = float32(f)
+			for ; d[j] == ' ' || d[j] == ','; j++ {
+			}
+			d = d[j:]
+		}
+
+		if normalizeTo64X64 {
+			// The original SVG is 32x32 units, with the top left being (0, 0).
+			// Normalize to 64x64 units, with the center being (0, 0).
+			if verb == 'A' {
+				args[0] = 2 * args[0]
+				args[1] = 2 * args[1]
+				args[2] /= 360
+				args[5] = 2*args[5] - 32
+				args[6] = 2*args[6] - 32
+			} else if verb == 'a' {
+				args[0] = 2 * args[0]
+				args[1] = 2 * args[1]
+				args[2] /= 360
+				args[5] = 2 * args[5]
+				args[6] = 2 * args[6]
+			} else if first || ('A' <= verb && verb <= 'Z') {
+				for i := range args {
+					args[i] = 2*args[i] - 32
+				}
+			} else {
+				for i := range args {
+					args[i] = 2 * args[i]
+				}
+			}
+		} else if verb == 'A' || verb == 'a' {
+			args[2] /= 360
+		}
+
+		if first {
+			first = false
+			e.StartPath(adj, args[0], args[1])
+			continue
+		}
+		switch verb {
+		case 'H':
+			e.AbsHLineTo(args[0])
+		case 'h':
+			e.RelHLineTo(args[0])
+		case 'V':
+			e.AbsVLineTo(args[0])
+		case 'v':
+			e.RelVLineTo(args[0])
+		case 'L':
+			e.AbsLineTo(args[0], args[1])
+		case 'l':
+			e.RelLineTo(args[0], args[1])
+		case 'm':
+			e.ClosePathRelMoveTo(args[0], args[1])
+		case 'S':
+			e.AbsSmoothCubeTo(args[0], args[1], args[2], args[3])
+		case 's':
+			e.RelSmoothCubeTo(args[0], args[1], args[2], args[3])
+		case 'C':
+			e.AbsCubeTo(args[0], args[1], args[2], args[3], args[4], args[5])
+		case 'c':
+			e.RelCubeTo(args[0], args[1], args[2], args[3], args[4], args[5])
+		case 'A':
+			e.AbsArcTo(args[0], args[1], args[2], args[3] != 0, args[4] != 0, args[5], args[6])
+		case 'a':
+			e.RelArcTo(args[0], args[1], args[2], args[3] != 0, args[4] != 0, args[5], args[6])
+		case 'z':
+			// No-op.
+		default:
+			return UnrecognizedPathDataVerb
+		}
+	}
+	e.ClosePathEndPath()
 	return nil
 }
