@@ -246,3 +246,64 @@ func (g *Gradient) At(x, y int) color.Color {
 	}
 	return g.Last
 }
+
+// GradientShape returns 0 for a linear gradient and 1 for a radial gradient.
+func (g *Gradient) GradientShape() int {
+	return int(g.Shape)
+}
+
+// SpreadMethod returns 0 for 'none', 1 for 'pad', 2 for 'reflect', 3 for
+// 'repeat'.
+func (g *Gradient) SpreadMethod() int {
+	return int(g.Spread)
+}
+
+// StopOffsets returns as a slice the offsets of the gradient stops.
+func (g *Gradient) StopOffsets() []float64 {
+	if len(g.Ranges) == 0 {
+		return nil
+	}
+	offsets := make([]float64, len(g.Ranges)+1)
+	for i, r := range g.Ranges {
+		offsets[i] = r.Offset0
+		offsets[i+1] = r.Offset1
+	}
+	return offsets
+}
+
+// StopColors returns as a slice the colors of the gradient stops.
+func (g *Gradient) StopColors() []color.RGBA {
+	if len(g.Ranges) == 0 {
+		return nil
+	}
+	colors := make([]color.RGBA, len(g.Ranges)+1)
+	for i, r := range g.Ranges {
+		colors[i] = color.RGBA{
+			uint8(uint16(r.R0) >> 8),
+			uint8(uint16(r.G0) >> 8),
+			uint8(uint16(r.B0) >> 8),
+			uint8(uint16(r.A0) >> 8),
+		}
+	}
+	colors[len(colors)-1] = color.RGBA{
+		uint8(g.Last.R >> 8),
+		uint8(g.Last.G >> 8),
+		uint8(g.Last.B >> 8),
+		uint8(g.Last.A >> 8),
+	}
+	return colors
+}
+
+// Transform is the pixel space to gradient space affine transformation
+// matrix.
+// | a b c |
+// | d e f |
+func (g *Gradient) Transform() (a, b, c, d, e, f float64) {
+	a = g.Pix2Grad[0]
+	b = g.Pix2Grad[1]
+	c = g.Pix2Grad[2]
+	d = g.Pix2Grad[3]
+	e = g.Pix2Grad[4]
+	f = g.Pix2Grad[5]
+	return
+}
