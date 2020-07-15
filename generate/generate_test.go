@@ -292,17 +292,17 @@ func TestEncodeCowbell(t *testing.T) {
 				for i := range iform {
 					iform[i] /= g.r
 				}
-				gen.SetGradient(10, 10, GradientShapeRadial, iform, GradientSpreadPad, g.stops)
+				gen.SetGradient(GradientShapeRadial, GradientSpreadPad, g.stops, iform)
 			} else {
 				x1 := g.x1 + g.tx
 				y1 := g.y1 + g.ty
 				x2 := g.x2 + g.tx
 				y2 := g.y2 + g.ty
-				gen.SetLinearGradient(10, 10, x1, y1, x2, y2, GradientSpreadPad, g.stops)
+				gen.SetLinearGradient(x1, y1, x2, y2, GradientSpreadPad, g.stops)
 			}
 		}
 
-		if err := encodePathData(&e, data.d, 0, false); err != nil {
+		if err := gen.SetPathData(data.d, 0, false); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -321,7 +321,7 @@ func TestEncodeElliptical(t *testing.T) {
 		sx, sy = 30, 15
 	)
 
-	gen.SetEllipticalGradient(10, 10, cx, cy, rx, ry, sx, sy, GradientSpreadReflect, []GradientStop{
+	gen.SetEllipticalGradient(cx, cy, rx, ry, sx, sy, GradientSpreadReflect, []GradientStop{
 		{Offset: 0, Color: color.RGBA{0xc0, 0x00, 0x00, 0xff}},
 		{Offset: 1, Color: color.RGBA{0x00, 0x00, 0xc0, 0xff}},
 	})
@@ -365,28 +365,28 @@ func TestEncodeGradient(t *testing.T) {
 	var gen Generator
 	gen.SetDestination(&e)
 
-	gen.SetLinearGradient(10, 10, -12, -30, +12, -18, GradientSpreadNone, rgb)
+	gen.SetLinearGradient(-12, -30, +12, -18, GradientSpreadNone, rgb)
 	gen.StartPath(0, -30, -30)
 	gen.AbsHLineTo(+30)
 	gen.AbsVLineTo(-18)
 	gen.AbsHLineTo(-30)
 	gen.ClosePathEndPath()
 
-	gen.SetLinearGradient(10, 10, -12, -14, +12, -2, GradientSpreadPad, cmy)
+	gen.SetLinearGradient(-12, -14, +12, -2, GradientSpreadPad, cmy)
 	gen.StartPath(0, -30, -14)
 	gen.AbsHLineTo(+30)
 	gen.AbsVLineTo(-2)
 	gen.AbsHLineTo(-30)
 	gen.ClosePathEndPath()
 
-	gen.SetCircularGradient(10, 10, -8, 8, 0, 16, GradientSpreadReflect, rgb)
+	gen.SetCircularGradient(-8, 8, 0, 16, GradientSpreadReflect, rgb)
 	gen.StartPath(0, -30, +2)
 	gen.AbsHLineTo(+30)
 	gen.AbsVLineTo(+14)
 	gen.AbsHLineTo(-30)
 	gen.ClosePathEndPath()
 
-	gen.SetCircularGradient(10, 10, -8, 24, 0, 16, GradientSpreadRepeat, cmy)
+	gen.SetCircularGradient(-8, 24, 0, 16, GradientSpreadRepeat, cmy)
 	gen.StartPath(0, -30, +18)
 	gen.AbsHLineTo(+30)
 	gen.AbsVLineTo(+30)

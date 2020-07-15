@@ -55,10 +55,10 @@ func (g *Generator) SetDestination(d ivg.Destination) {
 	g.Destination = d
 }
 
-// SetLinearGradient is like SetGradient with radial=false except that the
+// SetLinearGradient is like SetGradient with shape=ShapeLinear except that the
 // transformation matrix is implicitly defined by two boundary points (x1, y1)
 // and (x2, y2).
-func (g *Generator) SetLinearGradient(cBase, nBase uint8, x1, y1, x2, y2 float32, spread GradientSpread, stops []GradientStop) error {
+func (g *Generator) SetLinearGradient(x1, y1, x2, y2 float32, spread GradientSpread, stops []GradientStop) error {
 	// See the package documentation's appendix for a derivation of the
 	// transformation matrix.
 	dx, dy := x2-x1, y2-y1
@@ -69,13 +69,13 @@ func (g *Generator) SetLinearGradient(cBase, nBase uint8, x1, y1, x2, y2 float32
 		ma, mb, -ma*x1 - mb*y1,
 		0, 0, 0,
 	}
-	return g.SetGradient(cBase, nBase, GradientShapeLinear, vbx2grad, spread, stops)
+	return g.SetGradient(GradientShapeLinear, spread, stops, vbx2grad)
 }
 
 // SetCircularGradient is like SetGradient with radial=true except that the
 // transformation matrix is implicitly defined by a center (cx, cy) and a
 // radius vector (rx, ry) such that (cx+rx, cy+ry) is on the circle.
-func (g *Generator) SetCircularGradient(cBase, nBase uint8, cx, cy, rx, ry float32, spread GradientSpread, stops []GradientStop) error {
+func (g *Generator) SetCircularGradient(cx, cy, rx, ry float32, spread GradientSpread, stops []GradientStop) error {
 	// See the package documentation's appendix for a derivation of the
 	// transformation matrix.
 	invR := float32(1 / math.Sqrt(float64(rx*rx+ry*ry)))
@@ -83,14 +83,14 @@ func (g *Generator) SetCircularGradient(cBase, nBase uint8, cx, cy, rx, ry float
 		invR, 0, -cx * invR,
 		0, invR, -cy * invR,
 	}
-	return g.SetGradient(cBase, nBase, GradientShapeRadial, vbx2grad, spread, stops)
+	return g.SetGradient(GradientShapeRadial, spread, stops, vbx2grad)
 }
 
 // SetEllipticalGradient is like SetGradient with radial=true except that the
 // transformation matrix is implicitly defined by a center (cx, cy) and two
 // axis vectors (rx, ry) and (sx, sy) such that (cx+rx, cy+ry) and (cx+sx,
 // cy+sy) are on the ellipse.
-func (d *Generator) SetEllipticalGradient(cBase, nBase uint8, cx, cy, rx, ry, sx, sy float32, spread GradientSpread, stops []GradientStop) error {
+func (d *Generator) SetEllipticalGradient(cx, cy, rx, ry, sx, sy float32, spread GradientSpread, stops []GradientStop) error {
 	// See the package documentation's appendix for a derivation of the
 	// transformation matrix.
 	invRSSR := 1 / (rx*sy - sx*ry)
@@ -106,7 +106,7 @@ func (d *Generator) SetEllipticalGradient(cBase, nBase uint8, cx, cy, rx, ry, sx
 		ma, mb, mc,
 		md, me, mf,
 	}
-	return d.SetGradient(cBase, nBase, GradientShapeRadial, vbx2grad, spread, stops)
+	return d.SetGradient(GradientShapeRadial, spread, stops, vbx2grad)
 }
 
 // SetGradient sets CREG[CSEL] to encode the gradient whose colors defined by
@@ -127,7 +127,9 @@ func (d *Generator) SetEllipticalGradient(cBase, nBase uint8, cx, cy, rx, ry, sx
 //
 // See the package documentation for more details on the gradient encoding
 // format and the derivation of common transformation matrices.
-func (d *Generator) SetGradient(cBase, nBase uint8, shape GradientShape, transform Aff3, spread GradientSpread, stops []GradientStop) error {
+func (d *Generator) SetGradient(shape GradientShape, spread GradientSpread, stops []GradientStop, transform Aff3) error {
+	cBase, nBase := uint8(10), uint8(10)
+
 	nStops := uint8(len(stops))
 	if nStops > uint8(64-len(transform)) {
 		return TooManyGradientStops
