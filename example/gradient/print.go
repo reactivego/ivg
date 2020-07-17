@@ -30,8 +30,6 @@ import (
 	"gioui.org/text"
 )
 
-// PrintText
-
 var (
 	once       sync.Once
 	roboto []text.FontFace
