@@ -219,7 +219,6 @@ func HandleFrameEvent(event system.FrameEvent) {
 	maxY := float32(event.Size.Y)
 	constraints := f32.Rect(minX, minY, maxX, maxY)
 
-	// fill backdrop and check for button press
 	backdrop.Color = colornames.Grey800
 	if backdrop.Press(constraints, event.Queue, ops) {
 		switch SelectedRasterizer {
@@ -228,8 +227,6 @@ func HandleFrameEvent(event system.FrameEvent) {
 		case Vector:
 			SelectedRasterizer = Gio
 		}
-		// Flash backdrop color
-		backdrop.Color = colornames.Grey400
 	}
 	backdrop.Paint(constraints, ops)
 
