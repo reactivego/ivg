@@ -55,15 +55,31 @@ const (
 
 type key struct {
 	md5    [16]byte
-	c      color.RGBA
+	col      color.RGBA
 	rect   image.Rectangle
 	aspect PreserveAspectRatio
 	ax     float32
 	ay     float32
+}
+
+type Cache struct {
+	item   map[key]op.CallOp
 	raster Rasterizer
 }
 
-var iconCache = make(map[key]op.CallOp)
+func NewCache(raster Rasterizer) *Cache {
+	return &Cache{item: make(map[key]op.CallOp), raster: raster}
+}
+
+func (c *Cache) FromData(data []byte, col color.RGBA, rect image.Rectangle, aspect PreserveAspectRatio, ax, ay float32) (op.CallOp, error) {
+	key := key{md5.Sum(data), col, rect, aspect, ax, ay}
+	if callOp, present := c.item[key]; present {
+		return callOp, nil
+	}
+	callOp, err := FromData(data, col, rect, aspect, ax, ay, c.raster)
+	c.item[key] = callOp
+	return callOp, err
+}
 
 // FromData returns a gio op.CallOp that paints the icon decoded from 'data'
 // with the given color 'c' inside the given rectangle 'rect'.
@@ -97,10 +113,6 @@ var iconCache = make(map[key]op.CallOp)
 // The function returns an op.CallOp and nil on success or an empty
 // op.CallOp and an error when the icon could not be renderdered.
 func FromData(data []byte, c color.RGBA, rect image.Rectangle, aspect PreserveAspectRatio, ax, ay float32, raster Rasterizer) (op.CallOp, error) {
-	key := key{md5.Sum(data), c, rect, aspect, ax, ay, raster}
-	if callOp, present := iconCache[key]; present {
-		return callOp, nil
-	}
 	var callOp op.CallOp
 	viewbox := ivg.DefaultViewBox
 	palette := &ivg.DefaultPalette
@@ -159,6 +171,5 @@ func FromData(data []byte, c color.RGBA, rect image.Rectangle, aspect PreserveAs
 		paint.PaintOp{Rect: rect32}.Add(ops)
 	}
 	callOp = macro.Stop()
-	iconCache[key] = callOp
 	return callOp, nil
 }
