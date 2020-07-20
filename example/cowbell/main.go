@@ -23,7 +23,7 @@ import (
 	"github.com/reactivego/ivg"
 	"github.com/reactivego/ivg/generate"
 	"github.com/reactivego/ivg/raster"
-	"github.com/reactivego/ivg/raster/clip"
+	"github.com/reactivego/ivg/raster/gio"
 	"github.com/reactivego/ivg/raster/vector"
 	"github.com/reactivego/ivg/render"
 )
@@ -36,12 +36,12 @@ const (
 )
 
 const (
-	Clip = iota
+	Gio = iota
 	Vector
 )
 
 var (
-	SelectedRasterizer = Clip
+	SelectedRasterizer = Gio
 
 	ops = new(op.Ops)
 )
@@ -93,8 +93,8 @@ func Cowbell(constraints f32.Rectangle, ops *op.Ops) {
 	var rasterizer raster.Rasterizer
 	var dst *image.RGBA
 	switch SelectedRasterizer {
-	case Clip:
-		rasterizer = &clip.Rasterizer{Ops: ops}
+	case Gio:
+		rasterizer = &gio.Rasterizer{Ops: ops}
 	case Vector:
 		dst = image.NewRGBA(bounds)
 		rasterizer = &vector.Rasterizer{Dst: dst, DrawOp: draw.Src}
@@ -284,12 +284,11 @@ func HandleFrameEvent(event system.FrameEvent) {
 	backdrop.Color = colornames.Grey800
 	if backdrop.Press(constraints, event.Queue, ops) {
 		switch SelectedRasterizer {
-		case Clip:
+		case Gio:
 			SelectedRasterizer = Vector
 		case Vector:
-			SelectedRasterizer = Clip
+			SelectedRasterizer = Gio
 		}
-		backdrop.Color = colornames.Grey400
 	}
 	backdrop.Paint(constraints, ops)
 
@@ -315,10 +314,10 @@ func HandleFrameEvent(event system.FrameEvent) {
 	Cowbell(constraints, ops)
 
 	switch SelectedRasterizer {
-	case Clip:
-		PrintText("gioui.org/op/clip", constraints.Min, 0.0, 0.0, 1000, H6, ops)
+	case Gio:
+		PrintText("Gio", constraints.Min, 0.0, 0.0, 1000, H3, ops)
 	case Vector:
-		PrintText("golang.org/x/image/vector", constraints.Min, 0.0, 0.0, 1000, H6, ops)
+		PrintText("Vector", constraints.Min, 0.0, 0.0, 1000, H3, ops)
 	}
 
 	event.Frame(ops)
