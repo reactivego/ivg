@@ -16,9 +16,9 @@ The most important changes w.r.t. the original IconVG code are:
 2. Split icon encoding into `encode` and `generate` package.
 3. SVG gradient and path support is now part of `generate` package.
 4. Rename `Rasterizer` to `Renderer` and place it in the `render` package.
-5. Moved `Destination` interface into root `ivg` package.
-6. Made both `Encoder` and `Renderer` implement `Destination`.
-7. Made both `Decoder` and `Generator` use only `Destination` interface.
+5. Move `Destination` interface into root `ivg` package.
+6. Make both `Encoder` and `Renderer` implement `Destination`.
+7. Make both `Decoder` and `Generator` use only `Destination` interface.
 8. `Generator` can now directly render by plugging in a `Renderer` (very useful).
 9. `Encoder` can be plugged directly into a `Decoder` (useful for testing).
 10. Abstract away rasterizing into a seperate package `raster`
@@ -27,7 +27,7 @@ The most important changes w.r.t. the original IconVG code are:
 11. Create a rasterizer using "golang.org/x/image/vector" in directory `raster/vector`
 12. Create a rasterizer using "gioui.org/op/clip" in directory `raster/gio`
     - Special case for `GradientConfig`, selectively sample gradient only inside path bounds.
-14. Created examples in the `example` folder.
+14. Create examples in the `example` folder.
     - `actioninfo` generate an icon on the fly, render it and cache the result, [see below](#example-actioninfo).
     - `cowbell` exposes rendering differences between gio and vector rasterizer (click to switch rasterizer).
     - `favicon` exposes rendering difference between gio and vector rasterizer (click to switch rasterizer).
