@@ -55,23 +55,28 @@ const (
 
 type key struct {
 	md5    [16]byte
-	col      color.RGBA
-	rect   image.Rectangle
+	col    color.RGBA
+	rect   f32.Rectangle
 	aspect PreserveAspectRatio
 	ax     float32
 	ay     float32
 }
 
+// Cache is an icon cache that caches op.CallOp values returned by a call to
+// FromData.
 type Cache struct {
 	item   map[key]op.CallOp
 	raster Rasterizer
 }
 
+// NewCache returns a new icon cache for a given rasterizer.
 func NewCache(raster Rasterizer) *Cache {
 	return &Cache{item: make(map[key]op.CallOp), raster: raster}
 }
 
-func (c *Cache) FromData(data []byte, col color.RGBA, rect image.Rectangle, aspect PreserveAspectRatio, ax, ay float32) (op.CallOp, error) {
+// FromData returns a gio op.CallOp that paints the icon decoded from 'data'
+// with the given color 'c' inside the given rectangle 'rect'.
+func (c *Cache) FromData(data []byte, col color.RGBA, rect f32.Rectangle, aspect PreserveAspectRatio, ax, ay float32) (op.CallOp, error) {
 	key := key{md5.Sum(data), col, rect, aspect, ax, ay}
 	if callOp, present := c.item[key]; present {
 		return callOp, nil
@@ -112,7 +117,7 @@ func (c *Cache) FromData(data []byte, col color.RGBA, rect image.Rectangle, aspe
 //
 // The function returns an op.CallOp and nil on success or an empty
 // op.CallOp and an error when the icon could not be renderdered.
-func FromData(data []byte, c color.RGBA, rect image.Rectangle, aspect PreserveAspectRatio, ax, ay float32, raster Rasterizer) (op.CallOp, error) {
+func FromData(data []byte, c color.RGBA, rect f32.Rectangle, aspect PreserveAspectRatio, ax, ay float32, raster Rasterizer) (op.CallOp, error) {
 	var callOp op.CallOp
 	viewbox := ivg.DefaultViewBox
 	palette := &ivg.DefaultPalette
@@ -124,7 +129,7 @@ func FromData(data []byte, c color.RGBA, rect image.Rectangle, aspect PreserveAs
 	}
 	(*palette)[0] = c
 	options := &decode.DecodeOptions{Palette: palette}
-	rdx, rdy := float32(rect.Dx()), float32(rect.Dy())
+	rdx, rdy := rect.Dx(), rect.Dy()
 	vdx, vdy := viewbox.AspectRatio()
 	vbAR := vdx / vdy
 	vdx, vdy = rdx, rdy
@@ -142,33 +147,29 @@ func FromData(data []byte, c color.RGBA, rect image.Rectangle, aspect PreserveAs
 			vdy = vdx / vbAR
 		}
 	}
-	dx := (rdx - vdx)
-	dy := (rdy - vdy)
-	minX := float32(rect.Min.X) + dx*ax
-	maxX := minX + vdx
-	minY := float32(rect.Min.X) + dy*ay
-	maxY := minY + vdy
-	rect32 := f32.Rect(minX, minY, maxX, maxY)
+	rect.Min.X += (rdx - vdx) * ax
+	rect.Max.X = rect.Min.X + vdx
+	rect.Min.Y += (rdy - vdy) * ay
+	rect.Max.Y = rect.Min.Y + vdy
+	irect := image.Rect(int(rect.Min.X), int(rect.Min.Y), int(rect.Max.X), int(rect.Max.Y))
 	ops := new(op.Ops)
 	macro := op.Record(ops)
-	var z render.Renderer
 	switch raster {
 	case GioRasterizer:
-		r := gio.NewRasterizer(int(rect32.Dx()), int(rect32.Dy()), ops)
-		rect = image.Rect(int(rect32.Min.X), int(rect32.Min.Y), int(rect32.Max.X), int(rect32.Max.Y))
-		z.SetRasterizer(r, rect)
+		var z render.Renderer
+		z.SetRasterizer(gio.NewRasterizer(irect.Dx(), irect.Dy(), ops), irect)
 		if err := decode.Decode(&z, data, options); err != nil {
 			return callOp, err
 		}
 	case VectorRasterizer:
-		r := vector.NewRasterizer(image.NewRGBA(image.Rect(0, 0, int(rect32.Dx()), int(rect32.Dy()))), draw.Src)
+		var z render.Renderer
+		r := vector.NewRasterizer(image.NewRGBA(irect.Sub(irect.Min)), draw.Src)
 		z.SetRasterizer(r, r.Bounds())
 		if err := decode.Decode(&z, data, options); err != nil {
 			return callOp, err
 		}
 		paint.NewImageOp(r.Dst).Add(ops)
-		// paint.ColorOp{Color: c}.Add(ops)
-		paint.PaintOp{Rect: rect32}.Add(ops)
+		paint.PaintOp{Rect: rect}.Add(ops)
 	}
 	callOp = macro.Stop()
 	return callOp, nil

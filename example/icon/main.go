@@ -51,51 +51,41 @@ func (backdrop *Backdrop) Press(constraints f32.Rectangle, queue event.Queue, op
 }
 
 var (
-	ops                = new(op.Ops)
-	backdrop           Backdrop
-	index              = 0
-	SelectedRasterizer icon.Rasterizer
+	ops      = new(op.Ops)
+	backdrop Backdrop
+	index    = 0
+	raster   icon.Rasterizer
 )
 
 func HandleFrameEvent(event system.FrameEvent) {
 	ops.Reset()
 
-	// initial contraints in pixels
-	minX := float32(0)
-	minY := float32(0)
-	maxX := float32(event.Size.X)
-	maxY := float32(event.Size.Y)
-	constraints := f32.Rect(minX, minY, maxX, maxY)
+	constraints := f32.Rect(0, 0, float32(event.Size.X), float32(event.Size.Y))
 
-	// fill backdrop
 	backdrop.Color = colornames.Grey800
 	if backdrop.Press(constraints, event.Queue, ops) {
-		switch SelectedRasterizer {
+		switch raster {
 		case icon.GioRasterizer:
-			SelectedRasterizer = icon.VectorRasterizer
+			raster = icon.VectorRasterizer
 		case icon.VectorRasterizer:
-			SelectedRasterizer = icon.GioRasterizer
+			raster = icon.GioRasterizer
 		}
 	}
 	backdrop.Paint(constraints, ops)
 
-	// device independent inset + margin calculation
 	margin := unit.Dp(MarginDp)
 	leftInset := unit.Add(event.Metric, event.Insets.Left, margin)
 	topInset := unit.Add(event.Metric, event.Insets.Top, margin)
 	rightInset := unit.Add(event.Metric, event.Insets.Right, margin)
 	bottomInset := unit.Add(event.Metric, event.Insets.Bottom, margin)
-
-	// apply insets + margins to pixel constraints
-	minX += float32(event.Metric.Px(leftInset))
-	minY += float32(event.Metric.Px(topInset))
-	maxX -= float32(event.Metric.Px(rightInset))
-	maxY -= float32(event.Metric.Px(bottomInset))
-
-	constraints = f32.Rect(minX, minY, maxX, maxY)
+	constraints.Min.X += float32(event.Metric.Px(leftInset))
+	constraints.Min.Y += float32(event.Metric.Px(topInset))
+	constraints.Max.X -= float32(event.Metric.Px(rightInset))
+	constraints.Max.Y -= float32(event.Metric.Px(bottomInset))
 
 	op.Offset(constraints.Min).Add(ops)
 	constraints = constraints.Sub(constraints.Min)
+
 	paint.ColorOp{Color: colornames.Grey300}.Add(ops)
 	paint.PaintOp{Rect: constraints}.Add(ops)
 
@@ -103,16 +93,15 @@ func HandleFrameEvent(event system.FrameEvent) {
 	ico := Icons[(uint(index)+n)%n]
 	index++
 
-	rect := image.Rect(int(constraints.Min.X), int(constraints.Min.Y), int(constraints.Max.X), int(constraints.Max.Y))
-	if callOp, err := icon.FromData(ico.data, colornames.LightBlue600, rect, icon.AspectMeet, icon.Mid, icon.Mid, SelectedRasterizer); err == nil {
+	if callOp, err := icon.FromData(ico.data, colornames.LightBlue600, constraints, icon.AspectMeet, icon.Mid, icon.Mid, raster); err == nil {
 		callOp.Add(ops)
 	}
 
-	switch SelectedRasterizer {
+	switch raster {
 	case icon.GioRasterizer:
-		PrintText("GIO", constraints.Min, 0.0, 0.0, 1000, H3, ops)
+		PrintText("Gio", constraints.Min, 0.0, 0.0, 1000, H3, ops)
 	case icon.VectorRasterizer:
-		PrintText("VECTOR", constraints.Min, 0.0, 0.0, 1000, H3, ops)
+		PrintText("Vector", constraints.Min, 0.0, 0.0, 1000, H3, ops)
 	}
 	PrintText(ico.name, f32.Pt(constraints.Min.X, constraints.Max.Y), 0.0, 1.0, 1000, BodyText1, ops)
 
