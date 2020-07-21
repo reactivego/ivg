@@ -12,27 +12,9 @@ import (
 	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
-)
 
-// GradientConfig interface could be used in the future to extract the gradient
-// configuration of a source image and have it generated on the GPU.
-type GradientConfig interface {
-	// GradientShape returns 0 for a linear gradient and 1 for a radial
-	// gradient.
-	GradientShape() int
-	// SpreadMethod returns 0 for 'none', 1 for 'pad', 2 for 'reflect', 3 for
-	// 'repeat'.
-	SpreadMethod() int
-	// StopColors returns the colors of the gradient stops.
-	StopColors() []color.RGBA
-	// StopOffsets returns the offsets of the gradient stops.
-	StopOffsets() []float64
-	// Transform is the pixel space to gradient space affine transformation
-	// matrix.
-	// | a b c |
-	// | d e f |
-	Transform() (a, b, c, d, e, f float64)
-}
+	"github.com/reactivego/ivg/raster"
+)
 
 var (
 	MinFloat32 = float32(math.Inf(-1))
@@ -161,7 +143,7 @@ func (v *Rasterizer) Draw(r image.Rectangle, src image.Image, sp image.Point) {
 	op.Offset(f32.Pt(float32(r.Min.X), float32(r.Min.Y))).Add(v.Ops)
 	clip.Add(v.Ops)
 	switch source := src.(type) {
-	case GradientConfig:
+	case raster.GradientConfig:
 		gradrect := image.Rect(0, 0, r.Dx(), r.Dy())
 		gradient := image.NewRGBA(gradrect)
 		destrect := image.Rect(int(v.minX), int(v.minY), int(v.maxX), int(v.maxY))
