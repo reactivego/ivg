@@ -1,7 +1,7 @@
 package ivg_test
 
 import (
-	"log"
+	"bytes"
 	"testing"
 
 	"github.com/reactivego/ivg"
@@ -47,12 +47,19 @@ func TestEncodeDecode(t *testing.T) {
 	e = &encode.Encoder{}
 	e.HighResolutionCoordinates = true
 	if err := decode.Decode(e, expect, nil); err != nil {
-		log.Fatal(err)
+		t.Fatalf("decoding: %v", err)
 	}
 	actual, err := e.Bytes()
-
-	if err != nil || len(expect) != len(actual) {
-		t.Fatalf("actual!=expect: %v %d %d", err, len(actual), len(expect))
+	if err != nil {
+		t.Fatalf("encoding: %v", err)
+	} else {
+		if len(expect) != len(actual) {
+			t.Fatalf("len(actual)!=len(expect): %d %d", len(actual), len(expect))
+		} else {
+			if !bytes.Equal(expect, actual) {
+				t.Fatal("actual!=expect")
+			}
+		}
 	}
 
 	var r = &render.Renderer{}
