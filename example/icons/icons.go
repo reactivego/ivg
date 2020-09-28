@@ -1,8 +1,10 @@
+// SPDX-License-Identifier: Unlicense OR MIT
+
 package main
 
 import "golang.org/x/exp/shiny/materialdesign/icons"
 
-var Icons = []struct {
+var IconCollection = []struct {
 	name string
 	data []byte
 }{

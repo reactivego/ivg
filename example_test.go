@@ -13,8 +13,8 @@ import (
 	"path/filepath"
 
 	"github.com/reactivego/ivg/decode"
+	"github.com/reactivego/ivg/raster/vec"
 	"github.com/reactivego/ivg/render"
-	"github.com/reactivego/ivg/raster/vector"
 )
 
 func Example() {
@@ -26,7 +26,7 @@ func Example() {
 	const width = 24
 	dst := image.NewAlpha(image.Rect(0, 0, width, width))
 	var z render.Renderer
-	z.SetRasterizer(vector.NewRasterizer(dst,draw.Src), dst.Bounds())
+	z.SetRasterizer(vec.NewRasterizer(dst, draw.Src), dst.Bounds())
 	if err := decode.Decode(&z, ivgData, nil); err != nil {
 		log.Fatal(err)
 	}
