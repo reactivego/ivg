@@ -179,7 +179,9 @@ func ActionInfoData() ([]byte, error) {
 
 # Example Icons
 
-![Icons Gio](testdata/icons-gio.png)![Icons Vector](testdata/icons-vec.png)
+| ![Icons Gio](testdata/icons-gio.png) | ![Icons Vector](testdata/icons-vec.png) |
+|:---:|:---:|
+| Gio | Vec |
 
 The Icons example program takes icons from the package `"golang.org/x/exp/shiny/materialdesign/icons"` and renders them. These icons are just a few layers filled with a single color. The example uses function `FromData` from package `"github.com/reactivego/ivg/icon"` for rendering. `FromData` uses the following pipeline:
 ```
@@ -292,10 +294,9 @@ func Icons() {
 
 # Example Favicon
 
-
 | ![Favicon Gio](testdata/favicon-gio.png) | ![Favicon Vector](testdata/favicon-vec.png) |
 |:---:|:---:|
-| first | second |
+| Gio | Vec |
 
 Favicon programatically renders a vector image of a Gopher using multiple layers with translucency. It uses the following pipeline:
 ```
@@ -307,7 +308,9 @@ The resulting images are a little bit different. Look under the nose of the Goph
 
 # Example Cowbell
 
-![Cowbell Gio](testdata/cowbell-gio.png)![Cowbell Vector](testdata/cowbell-vec.png)
+| ![Cowbell Gio](testdata/cowbell-gio.png) | ![Cowbell Vector](testdata/cowbell-vec.png) |
+|:---:|:---:|
+| Gio | Vec |
 
 Cowbell programatically renders a vector image of a Cowbell using multiple layers with gradients and translucency. It uses the following pipeline:
 ```
@@ -317,7 +320,9 @@ The rendering takes relatively long because the gradients need to be pre-generat
 
 # Example Gradients
 
-![Gradients Gio](testdata/gradients-gio.png)![Gradients Vector](testdata/gradients-vec.png)
+| ![Gradients Gio](testdata/gradients-gio.png) | ![Gradients Vector](testdata/gradients-vec.png) |
+|:---:|:---:|
+| Gio | Vec |
 
 Gradients uses the following pipeline to programatically render a vector image consisting of multiple different gradients:
 ```
