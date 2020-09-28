@@ -35,13 +35,14 @@ func ActionInfo() {
         log.Fatal(err)
     }
 
-    var ops = new(op.Ops)
     cache := icon.NewCache(icon.GioRasterizer)
-    blue := color.RGBA{0x21, 0x96, 0xf3, 0xff}
+
+    ops := new(op.Ops)
     for next := range window.Events() {
         if frame, ok := next.(system.FrameEvent); ok {
             ops.Reset()
             rect := f32.Rect(0, 0, float32(frame.Size.X), float32(frame.Size.Y))
+            blue := color.RGBA{0x21, 0x96, 0xf3, 0xff}
             if callOp, err := cache.FromData(actionInfoData, blue, rect, icon.AspectMeet, icon.Mid, icon.Mid); err == nil {
                 callOp.Add(ops)
             } else {

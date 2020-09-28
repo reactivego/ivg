@@ -26,13 +26,14 @@ func PlayArrow() {
         app.Title("IVG - PlayArrow"),
         app.Size(unit.Dp(768), unit.Dp(768)),
     )
-    var ops = new(op.Ops)
+    ops := new(op.Ops)
     for event := range window.Events() {
         if frame, ok := event.(system.FrameEvent); ok {
             ops.Reset()
             rect := f32.Rect(0, 0, float32(frame.Size.X), float32(frame.Size.Y))
             blue := color.RGBA{0x21, 0x96, 0xf3, 0xff}
-            if callOp, err := icon.FromData(AVPlayArrow, blue, rect, icon.AspectMeet, icon.Mid, icon.Mid, icon.GioRasterizer); err == nil {
+            rasterizer := icon.GioRasterizer
+            if callOp, err := icon.FromData(AVPlayArrow, blue, rect, icon.AspectMeet, icon.Mid, icon.Mid, rasterizer); err == nil {
                 callOp.Add(ops)
             } else {
                 log.Fatal(err)
