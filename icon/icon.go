@@ -16,41 +16,41 @@ import (
 	"github.com/reactivego/ivg"
 	"github.com/reactivego/ivg/decode"
 	"github.com/reactivego/ivg/raster/gio"
-	"github.com/reactivego/ivg/raster/vector"
+	"github.com/reactivego/ivg/raster/vec"
 	"github.com/reactivego/ivg/render"
 )
 
 // PreserveAspectRatio is the SVG attribute 'PreserveAspectRatio' which
 // determines how the ViewBox of an icon is scaled w.r.t. a bounding
 // rectangle.
-type PreserveAspectRatio int
+type PreserveAspectRatio = ivg.PreserveAspectRatio
 
 const (
 	// AspectNone stretches or squashes the ViewBox to meet the rect.
-	AspectNone PreserveAspectRatio = iota
+	AspectNone = ivg.AspectNone
 	// AspectMeet fits the ViewBox inside the rect maintaining its aspect ratio.
-	AspectMeet
+	AspectMeet = ivg.AspectMeet
 	// AspectSlice fills the rect maintaining the ViewBox's aspect ratio.
-	AspectSlice
+	AspectSlice = ivg.AspectSlice
 )
 
 const (
 	// Min aligns min of ViewBox with min of rect
-	Min = 0.0
+	Min = ivg.Min
 	// Mid aligns mid of ViewBox with mid of rect
-	Mid = 0.5
+	Mid = ivg.Mid
 	// Max aligns max of ViewBox with max of rect
-	Max = 1.0
+	Max = ivg.Max
 )
 
 // Rasterizer specifies the rasterizer to use for rendering the icon.
 type Rasterizer int
 
 const (
-	// GioRasterizer selects "gioui.org/op/clip" as rasterizer
+	// GioRasterizer selects "gioui.org/op/clip" as rasterizer and rasterizes to an operation list (*op.Ops).
 	GioRasterizer Rasterizer = iota
-	// VectorRasterizer selects "golang.org/x/image/vector" as rasterizer
-	VectorRasterizer
+	// VecRasterizer selects "golang.org/x/image/vector" as rasterizer and rasterizes to a bitmap image (image.Image).
+	VecRasterizer
 )
 
 type key struct {
@@ -112,65 +112,43 @@ func (c *Cache) FromData(data []byte, col color.RGBA, rect f32.Rectangle, aspect
 // aligns the bottom of both rectangles
 //
 // raster specifies the rasterizer to use for rendering the icon.
-// GioRasterizer selects "gioui.org/op/clip" as rasterizer and
-// VectorRasterizer selects "golang.org/x/image/vector" as rasterizer
+// GioRasterizer selects "gioui.org/op/clip" as rasterizer and VecRasterizer
+// selects "golang.org/x/image/vector" as rasterizer
 //
 // The function returns an op.CallOp and nil on success or an empty
 // op.CallOp and an error when the icon could not be renderdered.
 func FromData(data []byte, c color.RGBA, rect f32.Rectangle, aspect PreserveAspectRatio, ax, ay float32, raster Rasterizer) (op.CallOp, error) {
-	var callOp op.CallOp
 	viewbox := ivg.DefaultViewBox
 	palette := &ivg.DefaultPalette
 	if md, err := decode.DecodeMetadata(data); err == nil {
 		viewbox = md.ViewBox
 		palette = &md.Palette
 	} else {
-		return callOp, err
+		return op.CallOp{}, err
 	}
 	(*palette)[0] = c
 	options := &decode.DecodeOptions{Palette: palette}
-	rdx, rdy := rect.Dx(), rect.Dy()
-	vdx, vdy := viewbox.AspectRatio()
-	vbAR := vdx / vdy
-	vdx, vdy = rdx, rdy
-	switch aspect {
-	case AspectMeet:
-		if vdx/vdy < vbAR {
-			vdy = vdx / vbAR
-		} else {
-			vdx = vdy * vbAR
-		}
-	case AspectSlice:
-		if vdx/vdy < vbAR {
-			vdx = vdy * vbAR
-		} else {
-			vdy = vdx / vbAR
-		}
-	}
-	rect.Min.X += (rdx - vdx) * ax
-	rect.Max.X = rect.Min.X + vdx
-	rect.Min.Y += (rdy - vdy) * ay
-	rect.Max.Y = rect.Min.Y + vdy
-	irect := image.Rect(int(rect.Min.X), int(rect.Min.Y), int(rect.Max.X), int(rect.Max.Y))
+	viewrect := viewbox.SizeToRect(ivg.Rect(rect.Min.X, rect.Min.Y, rect.Max.X, rect.Max.Y), aspect, ax, ay)
+	rect = f32.Rect(viewrect.Destructure())
+	irect := viewrect.AsImageRect()
 	ops := new(op.Ops)
 	macro := op.Record(ops)
 	switch raster {
 	case GioRasterizer:
 		var z render.Renderer
-		z.SetRasterizer(gio.NewRasterizer(irect.Dx(), irect.Dy(), ops), irect)
+		z.SetRasterizer(gio.NewRasterizer(ops, irect.Dx(), irect.Dy()), irect)
 		if err := decode.Decode(&z, data, options); err != nil {
-			return callOp, err
+			return op.CallOp{}, err
 		}
-	case VectorRasterizer:
+	case VecRasterizer:
 		var z render.Renderer
-		r := vector.NewRasterizer(image.NewRGBA(irect.Sub(irect.Min)), draw.Src)
+		r := vec.NewRasterizer(image.NewRGBA(irect.Sub(irect.Min)), draw.Src)
 		z.SetRasterizer(r, r.Bounds())
 		if err := decode.Decode(&z, data, options); err != nil {
-			return callOp, err
+			return op.CallOp{}, err
 		}
 		paint.NewImageOp(r.Dst).Add(ops)
 		paint.PaintOp{Rect: rect}.Add(ops)
 	}
-	callOp = macro.Stop()
-	return callOp, nil
+	return macro.Stop(), nil
 }

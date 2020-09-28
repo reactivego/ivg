@@ -33,7 +33,7 @@ type Rasterizer struct {
 	maxX, maxY float32
 }
 
-func NewRasterizer(w, h int, ops *op.Ops) *Rasterizer {
+func NewRasterizer(ops *op.Ops, w, h int) *Rasterizer {
 	v := &Rasterizer{
 		Ops:  ops,
 		size: image.Pt(w, h),
@@ -150,7 +150,7 @@ func (v *Rasterizer) Draw(r image.Rectangle, src image.Image, sp image.Point) {
 		draw.Draw(gradient, destrect, src, destrect.Min.Add(sp), draw.Src)
 		paint.NewImageOp(gradient).Add(v.Ops)
 	case *image.Uniform:
-		c := color.RGBAModel.Convert(source.C).(color.RGBA)
+		c := RGBAModel.Convert(source.C).(color.RGBA)
 		paint.ColorOp{Color: c}.Add(v.Ops)
 	default:
 		paint.NewImageOp(src).Add(v.Ops)

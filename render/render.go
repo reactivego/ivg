@@ -72,8 +72,8 @@ type Renderer struct {
 // The IconVG graphic (which does not have a fixed size in pixels) will be
 // scaled in the X and Y dimensions to fit the rectangle r. The scaling factors
 // may differ in the two dimensions.
-func (z *Renderer) SetRasterizer(c raster.Rasterizer, r image.Rectangle) {
-	z.z = c
+func (z *Renderer) SetRasterizer(dst raster.Rasterizer, r image.Rectangle) {
+	z.z = dst
 	if r.Empty() {
 		r = image.Rectangle{}
 	}

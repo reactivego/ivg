@@ -18,8 +18,8 @@ import (
 
 	"github.com/reactivego/ivg"
 	"github.com/reactivego/ivg/decode"
+	"github.com/reactivego/ivg/raster/vec"
 	"github.com/reactivego/ivg/render"
-	"github.com/reactivego/ivg/raster/vector"
 )
 
 // overwriteTestdataFiles is temporarily set to true when adding new
@@ -133,7 +133,7 @@ func TestRenderer(t *testing.T) {
 			bounds := image.Rect(0, 0, width, height)
 			got := image.NewRGBA(bounds)
 			var z render.Renderer
-			z.SetRasterizer(vector.NewRasterizer(got, draw.Src), got.Bounds())
+			z.SetRasterizer(vec.NewRasterizer(got, draw.Src), got.Bounds())
 			if err := decode.Decode(&z, ivgData, opts); err != nil {
 				t.Errorf("%s %q variant: Decode: %v", tc.filename, variant, err)
 				continue
