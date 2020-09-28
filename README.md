@@ -292,7 +292,10 @@ func Icons() {
 
 # Example Favicon
 
-![Favicon Gio](testdata/favicon-gio.png)![Favicon Vector](testdata/favicon-vec.png)
+
+| ![Favicon Gio](testdata/favicon-gio.png) | ![Favicon Vector](testdata/favicon-vec.png) |
+|:---:|:---:|
+| first | second |
 
 Favicon programatically renders a vector image of a Gopher using multiple layers with translucency. It uses the following pipeline:
 ```
