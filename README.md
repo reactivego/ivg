@@ -2,8 +2,8 @@
 
     import "github.com/reactivego/ivg"
 
-[![](.github/godev.svg)](https://pkg.go.dev/github.com/reactivego/ivg?tab=doc)
-[![](.github/godoc.svg)](https://godoc.org/github.com/reactivego/ivg)
+[![](../assets/godev.svg?raw=true)](https://pkg.go.dev/github.com/reactivego/ivg?tab=doc)
+[![](../assets/godoc.svg?raw=true)](https://godoc.org/github.com/reactivego/ivg)
 
 [Gio](https://gioui.org) (immediate mode GUI in Go) uses [IconVG](https://golang.org/x/exp/shiny/iconvg) (binary format for simple vector graphic icons).
 This code is a refactoring of the IconVG code. It removes the need for rendering to an intermediate RGBA image. Instead it uses Gio `clip.Path` functionality.
@@ -38,7 +38,7 @@ The most important changes w.r.t. the original IconVG code are:
 
 ## Example PlayArrow
 
-![PlayButton Gio](testdata/playbutton-gio.png)
+![PlayButton Gio](../assets/playbutton-gio.png?raw=true)
 
 Simplest example of rendering an icon from an .ivg file stored in a slice of bytes.
 
@@ -96,7 +96,7 @@ var AVPlayArrow = []byte{
 ```
 ## Example ActionInfo
 
-![ActionInfo Gio](testdata/actioninfo-gio.png)
+![ActionInfo Gio](../assets/actioninfo-gio.png?raw=true)
 
 Generating the .ivg bytes for an icon on the fly and then rendering it. Rendering operations are cached in an icon cache. The function `ActionInfoData()` is called once to programatically generate an .ivg byte slice using the following pipeline:
 ```
@@ -179,7 +179,7 @@ func ActionInfoData() ([]byte, error) {
 
 # Example Icons
 
-| ![Icons Gio](testdata/icons-gio.png) | ![Icons Vector](testdata/icons-vec.png) |
+| ![Icons Gio](../assets/icons-gio.png?raw=true) | ![Icons Vector](../assets/icons-vec.png?raw=true) |
 |:---:|:---:|
 | Gio | Vec |
 
@@ -294,7 +294,7 @@ func Icons() {
 
 # Example Favicon
 
-| ![Favicon Gio](testdata/favicon-gio.png) | ![Favicon Vector](testdata/favicon-vec.png) |
+| ![Favicon Gio](../assets/favicon-gio.png?raw=true) | ![Favicon Vector](../assets/favicon-vec.png?raw=true) |
 |:---:|:---:|
 | Gio | Vec |
 
@@ -308,7 +308,7 @@ The resulting images are a little bit different. Look under the nose of the Goph
 
 # Example Cowbell
 
-| ![Cowbell Gio](testdata/cowbell-gio.png) | ![Cowbell Vector](testdata/cowbell-vec.png) |
+| ![Cowbell Gio](../assets/cowbell-gio.png?raw=true) | ![Cowbell Vector](../assets/cowbell-vec.png?raw=true) |
 |:---:|:---:|
 | Gio | Vec |
 
@@ -320,7 +320,7 @@ The rendering takes relatively long because the gradients need to be pre-generat
 
 # Example Gradients
 
-| ![Gradients Gio](testdata/gradients-gio.png) | ![Gradients Vector](testdata/gradients-vec.png) |
+| ![Gradients Gio](../assets/gradients-gio.png?raw=true) | ![Gradients Vector](../assets/gradients-vec.png?raw=true) |
 |:---:|:---:|
 | Gio | Vec |
 
