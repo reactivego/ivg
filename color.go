@@ -145,11 +145,13 @@ func ValidAlphaPremulColor(c color.RGBA) bool {
 	return c.R <= c.A && c.G <= c.A && c.B <= c.A
 }
 
+// ValidGradient returns true if the RGBA color is non-sensical
 func ValidGradient(c color.RGBA) bool {
 	return c.A == 0 && c.B&0x80 != 0
 }
 
-// EncodeGradient returns an nonsensical RGBA color encoding a gradient.
+// EncodeGradient returns a non-sensical RGBA color encoding gradient
+// parameters.
 func EncodeGradient(cBase, nBase, shape, spread, nStops uint8) color.RGBA {
 	cBase &= 0x3f
 	nBase &= 0x3f
@@ -164,7 +166,8 @@ func EncodeGradient(cBase, nBase, shape, spread, nStops uint8) color.RGBA {
 	}
 }
 
-// EncodeGradient returns an nonsensical RGBA color encoding a gradient.
+// DecodeGradient returns the gradient parameters from a non-sensical RGBA
+// color encoding a gradient.
 func DecodeGradient(c color.RGBA) (cBase, nBase, shape, spread, nStops uint8) {
 	cBase = c.G & 0x3f
 	nBase = c.B & 0x3f
