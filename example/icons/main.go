@@ -92,7 +92,7 @@ func Icons() {
 			}
 
 			at := time.Now().Add(500 * time.Millisecond)
-			op.InvalidateOp{At:at}.Add(ops)
+			op.InvalidateOp{At: at}.Add(ops)
 			frame.Frame(ops)
 		}
 	}
