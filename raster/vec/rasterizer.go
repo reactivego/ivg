@@ -14,31 +14,31 @@ import (
 // have to take it as a parameter.
 type Rasterizer struct {
 	vector.Rasterizer
-	Dst    draw.Image
+
+	// Dst is the image that the Draw call uses as destination to draw into.
+	Dst draw.Image
+
+	// DrawOp is a Porter-Duff compositing operator that will be used for the
+	// next call to the Draw method. After that call finishes, DrawOp is set to
+	// draw.Over.
 	DrawOp draw.Op
 }
 
-// NewRasterizer returns a rasterizer for dst image, with the dst width and
-// height used to reset the inner rasterizer. The drawOp is set both as the
-// inner drawOp and as the DrawOp field.
-func NewRasterizer(dst draw.Image, drawOp draw.Op) *Rasterizer {
-	r := &Rasterizer{Dst: dst, DrawOp: drawOp}
-	w, h := dst.Bounds().Dx(), dst.Bounds().Dy()
-	r.Rasterizer.Reset(w, h)
-	r.Rasterizer.DrawOp = r.DrawOp
+// NewRasterizer returns a rasterizer for dst image, with the dst size used to
+// reset the inner rasterizer.
+func NewRasterizer(dst draw.Image) *Rasterizer {
+	r := &Rasterizer{Dst: dst}
+	s := dst.Bounds().Size()
+	r.Rasterizer.Reset(s.X, s.Y)
 	return r
 }
 
-// Reset will reset the inner rasterizer to its initial state and then sets
-// the inner DrawOp to the current DrawOp value. It will then set the current
-// DrawOp value to draw.Over. So the next time Reset is called draw.Over will
-// be set in the inner Rasterizer unless DrawOp is set before calling Reset.
-func (r *Rasterizer) Reset(w, h int) {
-	r.Rasterizer.Reset(w, h)
-	r.Rasterizer.DrawOp = r.DrawOp
-	r.DrawOp = draw.Over
-}
-
-func (r *Rasterizer) Draw(rect image.Rectangle, src image.Image, sp image.Point) {
-	r.Rasterizer.Draw(r.Dst, rect, src, sp)
+// Draw aligns r.Min in field Dst with sp in src and then replaces the
+// rectangle r in Dst with the result of drawing src on Dst. The current value
+// of the DrawOp field is used for drawing. But note, after drawing the DrawOp
+// is reset to draw.Over.
+func (z *Rasterizer) Draw(r image.Rectangle, src image.Image, sp image.Point) {
+	z.Rasterizer.DrawOp = z.DrawOp
+	z.Rasterizer.Draw(z.Dst, r, src, sp)
+	z.DrawOp = draw.Over
 }

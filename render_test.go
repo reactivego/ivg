@@ -133,7 +133,7 @@ func TestRenderer(t *testing.T) {
 			bounds := image.Rect(0, 0, width, height)
 			got := image.NewRGBA(bounds)
 			var z render.Renderer
-			z.SetRasterizer(vec.NewRasterizer(got, draw.Src), got.Bounds())
+			z.SetRasterizer(&vec.Rasterizer{Dst: got, DrawOp: draw.Src}, got.Bounds())
 			if err := decode.Decode(&z, ivgData, opts); err != nil {
 				t.Errorf("%s %q variant: Decode: %v", tc.filename, variant, err)
 				continue

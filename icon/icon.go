@@ -142,8 +142,9 @@ func FromData(data []byte, c color.RGBA, rect f32.Rectangle, aspect PreserveAspe
 		}
 	case VecRasterizer:
 		var z render.Renderer
-		r := vec.NewRasterizer(image.NewRGBA(irect.Sub(irect.Min)), draw.Src)
-		z.SetRasterizer(r, r.Bounds())
+		irect = irect.Sub(irect.Min)
+		r := &vec.Rasterizer{Dst: image.NewRGBA(irect), DrawOp: draw.Src}
+		z.SetRasterizer(r, irect)
 		if err := decode.Decode(&z, data, options); err != nil {
 			return op.CallOp{}, err
 		}
