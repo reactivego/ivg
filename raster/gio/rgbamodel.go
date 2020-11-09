@@ -12,19 +12,19 @@ import (
 //
 //	yellow := color.NRGBA{0xfd, 0xee, 0x74, 0x7f}
 //	rgba := gio.RGBAModel.Convert(yellow).(color.RGBA)
-var RGBAModel color.Model = color.ModelFunc(rGBAModel)
+var RGBAModel color.Model = color.ModelFunc(rgbaModel)
 
-func rGBAModel(c color.Color) color.Color {
+func rgbaModel(c color.Color) color.Color {
 	var r, g, b, a uint32
 	premul := float32(0xffff)
 	switch c := c.(type) {
 	case color.NRGBA64:
 		r, g, b, a = uint32(c.R), uint32(c.G), uint32(c.B), uint32(c.A)
 	case color.NRGBA:
-		r = uint32(c.R) | uint32(c.R)<<8
-		g = uint32(c.G) | uint32(c.G)<<8
-		b = uint32(c.B) | uint32(c.B)<<8
-		a = uint32(c.A) | uint32(c.A)<<8
+		r = uint32(c.R) * 0x101
+		g = uint32(c.G) * 0x101
+		b = uint32(c.B) * 0x101
+		a = uint32(c.A) * 0x101
 	default:
 		r, g, b, a = c.RGBA()
 		premul = float32(a)
@@ -41,7 +41,7 @@ func rGBAModel(c color.Color) color.Color {
 	gf = linearTosRGB(gf * float32(a) / 0xffff)
 	bf := sRGBToLinear(float32(b) / premul)
 	bf = linearTosRGB(bf * float32(a) / 0xffff)
-	return color.RGBA{uint8(rf*255 + .5), uint8(gf*255 + .5), uint8(bf*255 + .5), uint8(a >> 8)}
+	return color.RGBA{uint8(rf*0xff + .5), uint8(gf*0xff + .5), uint8(bf*0xff + .5), uint8(a >> 8)}
 }
 
 // linearTosRGB transforms color value from linear to sRGB.
@@ -55,7 +55,6 @@ func linearTosRGB(c float32) float32 {
 	case 0.0031308 <= c && c < 1:
 		return 1.055*float32(math.Pow(float64(c), 0.41666)) - 0.055
 	}
-
 	return 1
 }
 
