@@ -129,8 +129,8 @@ func FromData(data []byte, c color.RGBA, rect f32.Rectangle, aspect PreserveAspe
 	(*palette)[0] = c
 	options := &decode.DecodeOptions{Palette: palette}
 	viewrect := viewbox.SizeToRect(ivg.Rect(rect.Min.X, rect.Min.Y, rect.Max.X, rect.Max.Y), aspect, ax, ay)
-	rect = f32.Rect(viewrect.Destructure())
-	irect := viewrect.AsImageRect()
+	rect = f32.Rect(viewrect.Fields())
+	irect := image.Rect(viewrect.IntFields())
 	ops := new(op.Ops)
 	macro := op.Record(ops)
 	switch raster {

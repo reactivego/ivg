@@ -117,7 +117,7 @@ func TestRenderer(t *testing.T) {
 				length = 64
 			}
 			width, height := length, length
-			if dx, dy := md.ViewBox.AspectRatio(); dx < dy {
+			if dx, dy := md.ViewBox.Size(); dx < dy {
 				width = int(float32(length) * dx / dy)
 			} else {
 				height = int(float32(length) * dy / dx)

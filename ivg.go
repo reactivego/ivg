@@ -5,7 +5,6 @@
 package ivg
 
 import (
-	"image"
 	"image/color"
 )
 
@@ -29,26 +28,21 @@ func Rect(minX, minY, maxX, maxY float32) Rectangle {
 	return Rectangle{minX, minY, maxX, maxY}
 }
 
-// Returrn the individual fields of the rectangle as multiple return
-// arguments.
-func (r Rectangle) Destructure() (MinX, MinY, MaxX, MaxY float32) {
+// Fields returns the individual fields of the rectangle as multiple
+// float32 return arguments.
+func (r Rectangle) Fields() (MinX, MinY, MaxX, MaxY float32) {
 	return r.MinX, r.MinY, r.MaxX, r.MaxY
 }
 
-// Dx returns the width of the rectangle.
-func (r Rectangle) Dx() float32 {
-	return r.MaxX - r.MinX
+// Size returns the Rectangles's size in both dimensions.
+func (r Rectangle) Size() (dx, dy float32) {
+	return r.MaxX - r.MinX, r.MaxY - r.MinY
 }
 
-// Dy returns the height of the rectangle.
-func (r Rectangle) Dy() float32 {
-	return r.MaxY - r.MinY
-}
-
-// AsImageRect returns an image.Rectangle for the rectangle by truncating the
-// individual float32 coordinates.
-func (r Rectangle) AsImageRect() image.Rectangle {
-	return image.Rect(int(r.MinX), int(r.MinY), int(r.MaxX), int(r.MaxY))
+// IntFields returns the individual fields of the rectangle as multiple
+// int return arguments by truncating the float32 to int.
+func (r Rectangle) IntFields() (MinX, MinY, MaxX, MaxY int) {
+	return int(r.MinX), int(r.MinY), int(r.MaxX), int(r.MaxY)
 }
 
 // PreserveAspectRatio is the SVG attribute 'PreserveAspectRatio' which
@@ -76,9 +70,9 @@ const (
 // ViewBox is a Rectangle
 type ViewBox Rectangle
 
-// AspectRatio returns the ViewBox's aspect ratio. An IconVG graphic is
+// Size returns the ViewBox's size in both dimensions. An IconVG graphic is
 // scalable; these dimensions do not necessarily map 1:1 to pixels.
-func (v *ViewBox) AspectRatio() (dx, dy float32) {
+func (v *ViewBox) Size() (dx, dy float32) {
 	return v.MaxX - v.MinX, v.MaxY - v.MinY
 }
 
@@ -88,8 +82,8 @@ func (v *ViewBox) AspectRatio() (dx, dy float32) {
 // For example ax = Mid, ay = Mid will position the resized viewbox always in
 // the middle of the rect
 func (v *ViewBox) SizeToRect(rect Rectangle, aspect PreserveAspectRatio, ax, ay float32) Rectangle {
-	rdx, rdy := rect.Dx(), rect.Dy()
-	vdx, vdy := v.AspectRatio()
+	rdx, rdy := rect.Size()
+	vdx, vdy := v.Size()
 	vbAR := vdx / vdy
 	vdx, vdy = rdx, rdy
 	switch aspect {

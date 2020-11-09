@@ -85,8 +85,8 @@ func Cowbell() {
 
 			// render actual content
 			viewrect := ViewBox.SizeToRect(ivg.Rect(rect.Min.X, rect.Min.Y, rect.Max.X, rect.Max.Y), ivg.AspectMeet, ivg.Min, ivg.Mid)
-			bounds := viewrect.AsImageRect()
-			rect = f32.Rect(viewrect.Destructure())
+			bounds := image.Rect(viewrect.IntFields())
+			rect = f32.Rect(viewrect.Fields())
 			renderer := &render.Renderer{}
 			switch rasterizer {
 			case Gio:
@@ -190,7 +190,6 @@ func Render(renderer ivg.Destination, viewbox ivg.ViewBox) {
 		c color.RGBA
 		g int
 		d string
-		t *generate.Aff3
 	}
 
 	paths := []Path{{

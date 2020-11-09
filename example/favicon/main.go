@@ -84,9 +84,9 @@ func Favicon() {
 			paint.PaintOp{Rect: rect}.Add(ops)
 
 			// render actual content
-			viewrect := ViewBox.SizeToRect(ivg.Rect(rect.Min.X,rect.Min.Y,rect.Max.X,rect.Max.Y), ivg.AspectMeet, ivg.Mid, ivg.Mid)
-			bounds := viewrect.AsImageRect()
-			rect = f32.Rect(viewrect.Destructure())
+			viewrect := ViewBox.SizeToRect(ivg.Rect(rect.Min.X, rect.Min.Y, rect.Max.X, rect.Max.Y), ivg.AspectMeet, ivg.Mid, ivg.Mid)
+			bounds := image.Rect(viewrect.IntFields())
+			rect = f32.Rect(viewrect.Fields())
 			renderer := &render.Renderer{}
 			switch rasterizer {
 			case Gio:
