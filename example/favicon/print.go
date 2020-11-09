@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	once       sync.Once
+	once   sync.Once
 	roboto []text.FontFace
 )
 
@@ -73,12 +73,12 @@ func RobotoFontFaces() []text.FontFace {
 }
 
 var (
-	RobotoThin   = text.Font{"Roboto", "", text.Regular, 100}
-	RobotoLight  = text.Font{"Roboto", "", text.Regular, 200}
-	RobotoNormal = text.Font{"Roboto", "", text.Regular, text.Normal /*400*/}
-	RobotoMedium = text.Font{"Roboto", "", text.Regular, text.Medium /*500*/}
-	RobotoBold   = text.Font{"Roboto", "", text.Regular, text.Bold /*600*/}
-	RobotoBlack  = text.Font{"Roboto", "", text.Regular, 800}
+	RobotoThin   = text.Font{Typeface: "Roboto", Variant: "", Style: text.Regular, Weight: 100}
+	RobotoLight  = text.Font{Typeface: "Roboto", Variant: "", Style: text.Regular, Weight: 200}
+	RobotoNormal = text.Font{Typeface: "Roboto", Variant: "", Style: text.Regular, Weight: text.Normal /*400*/}
+	RobotoMedium = text.Font{Typeface: "Roboto", Variant: "", Style: text.Regular, Weight: text.Medium /*500*/}
+	RobotoBold   = text.Font{Typeface: "Roboto", Variant: "", Style: text.Regular, Weight: text.Bold /*600*/}
+	RobotoBlack  = text.Font{Typeface: "Roboto", Variant: "", Style: text.Regular, Weight: 800}
 )
 
 type TextStyle struct {
