@@ -69,30 +69,33 @@ func PlayArrow() {
         app.Title("IVG - PlayArrow"),
         app.Size(unit.Dp(768), unit.Dp(768)),
     )
+    playArrow, err := icon.New([]byte{
+        // AVPlayArrow data taken from "golang.org/x/exp/shiny/materialdesign/icons"
+        0x89, 0x49, 0x56, 0x47, 0x02, 0x0a, 0x00, 0x50, 0x50, 0xb0,
+        0xb0, 0xc0, 0x70, 0x64, 0xe9, 0xb8, 0x20, 0xac, 0x64, 0xe1,
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
     ops := new(op.Ops)
     for event := range window.Events() {
         if frame, ok := event.(system.FrameEvent); ok {
             ops.Reset()
-            rect := f32.Rect(0, 0, float32(frame.Size.X), float32(frame.Size.Y))
+
+            contentRect := f32.Rect(0, 0, float32(frame.Size.X), float32(frame.Size.Y))
+            viewRect := playArrow.AspectMeet(contentRect, 0.5, 0.5)
             blue := color.RGBA{0x21, 0x96, 0xf3, 0xff}
-            rasterizer := icon.GioRasterizer
-            if callOp, err := icon.FromData(AVPlayArrow, blue, rect, icon.AspectMeet, icon.Mid, icon.Mid, rasterizer); err == nil {
-                callOp.Add(ops)
-            } else {
+            callOp, err := playArrow.Rasterize(viewRect, blue)
+            if err != nil {
                 log.Fatal(err)
             }
+            callOp.Add(ops)
+
             frame.Frame(ops)
         }
     }
     os.Exit(0)
 }
-
-// ACPlayArrow was taken from "golang.org/x/exp/shiny/materialdesign/icons"
-var AVPlayArrow = []byte{
-    0x89, 0x49, 0x56, 0x47, 0x02, 0x0a, 0x00, 0x50, 0x50, 0xb0, 0xb0, 0xc0, 0x70, 0x64, 0xe9, 0xb8,
-    0x20, 0xac, 0x64, 0xe1,
-}
-
 ```
 ## Example ActionInfo
 
@@ -102,7 +105,7 @@ Generating the .ivg bytes for an icon on the fly and then rendering it. Renderin
 ```
 Generator -> Encoder
 ```
-The resulting bytes are stored for later rendering during a system.FrameEvent. When the icon needs to be rendered, call the icon.Cache FromData method with the .ivg data bytes and additional arguments.
+The resulting bytes are stored for later rendering during a system.FrameEvent. When the icon needs to be rendered, call the icon.Cache Render method with the .ivg data bytes and additional arguments.
 The icon cache uses the following pipeline to render the icon.
  
 ```
@@ -140,21 +143,29 @@ func ActionInfo() {
         app.Title("IVG - ActionInfo"),
         app.Size(unit.Dp(768), unit.Dp(768)),
     )
-
-    actionInfoData, err := ActionInfoData()
+    // generate ivg data bytes on the fly for the ActionInfo icon.
+    enc := &encode.Encoder{}
+    gen := &generate.Generator{Destination: enc}
+    gen.Reset(ivg.ViewBox{0, 0, 48, 48}, &ivg.DefaultPalette)
+    gen.SetPathData("M24 4C12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 "+
+        "20-20S35.05 4 24 4zm2 30h-4V22h4v12zm0-16h-4v-4h4v4z", 0, false)
+    actionInfoData, err := enc.Bytes()
     if err != nil {
         log.Fatal(err)
     }
-
-    cache := icon.NewCache(icon.GioRasterizer)
-
+    actionInfo, err := icon.New(actionInfoData)
+    if err != nil {
+        log.Fatal(err)
+    }
+    cache := icon.NewCache()
     ops := new(op.Ops)
     for next := range window.Events() {
         if frame, ok := next.(system.FrameEvent); ok {
             ops.Reset()
-            rect := f32.Rect(0, 0, float32(frame.Size.X), float32(frame.Size.Y))
+            contentRect := f32.Rect(0, 0, float32(frame.Size.X), float32(frame.Size.Y))
+            viewRect := actionInfo.AspectMeet(contentRect, ivg.Mid, ivg.Mid)
             blue := color.RGBA{0x21, 0x96, 0xf3, 0xff}
-            if callOp, err := cache.FromData(actionInfoData, blue, rect, icon.AspectMeet, icon.Mid, icon.Mid); err == nil {
+            if callOp, err := cache.Rasterize(actionInfo, viewRect, blue); err == nil {
                 callOp.Add(ops)
             } else {
                 log.Fatal(err)
@@ -164,26 +175,14 @@ func ActionInfo() {
     }
     os.Exit(0)
 }
-
-// ActionInfoData generates ivg data bytes on the fly for the ActionInfo icon.
-func ActionInfoData() ([]byte, error) {
-    e := &encode.Encoder{}
-    g := &generate.Generator{Destination: e}
-    g.Reset(ivg.ViewBox{0, 0, 48, 48}, &ivg.DefaultPalette)
-    g.SetPathData("M24 4C12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 "+
-        "20-20S35.05 4 24 4zm2 30h-4V22h4v12zm0-16h-4v-4h4v4z", 0, false)
-    return e.Bytes()
-}
 ```
-
-
 # Example Icons
 
 | ![Icons Gio](../assets/icons-gio.png?raw=true) | ![Icons Vector](../assets/icons-vec.png?raw=true) |
 |:---:|:---:|
 | Gio | Vec |
 
-The Icons example program takes icons from the package `"golang.org/x/exp/shiny/materialdesign/icons"` and renders them. These icons are just a few layers filled with a single color. The example uses function `FromData` from package `"github.com/reactivego/ivg/icon"` for rendering. `FromData` uses the following pipeline:
+The Icons example program takes icons from the package `"golang.org/x/exp/shiny/materialdesign/icons"` and renders them. These icons are just a few layers filled with a single color. The example uses function `Render` from package `"github.com/reactivego/ivg/icon"` for rendering. `Render` uses the following pipeline:
 ```
 Decoder -> Renderer -> Rasterizer
 ```
@@ -196,6 +195,7 @@ package main
 
 import (
     "fmt"
+    "image"
     "log"
     "os"
     "time"
@@ -207,6 +207,7 @@ import (
     "gioui.org/io/pointer"
     "gioui.org/io/system"
     "gioui.org/op"
+    "gioui.org/op/clip"
     "gioui.org/op/paint"
     "gioui.org/unit"
 
@@ -223,7 +224,7 @@ func Icons() {
         app.Title("IVG - Icons"),
         app.Size(unit.Dp(768), unit.Dp(768)),
     )
-    rasterizer := icon.GioRasterizer
+    var rasterizer icon.Rasterizer = icon.GioRasterizer
     ops := new(op.Ops)
     backdrop := new(int)
     index := 0
@@ -231,10 +232,7 @@ func Icons() {
         if frame, ok := next.(system.FrameEvent); ok {
             ops.Reset()
 
-            // initial window rect in pixels
-            rect := f32.Rect(0, 0, float32(frame.Size.X), float32(frame.Size.Y))
-
-            // backdrop switch renderer on release and fill rectangle
+            // clicking on backdrop will switch active renderer
             pointer.InputOp{Tag: backdrop, Types: pointer.Release}.Add(ops)
             for _, next := range frame.Queue.Events(backdrop) {
                 if event, ok := next.(pointer.Event); ok {
@@ -248,43 +246,49 @@ func Icons() {
                     }
                 }
             }
+
+            // fill the whole backdrop rectangle
             paint.ColorOp{Color: colornames.Grey800}.Add(ops)
-            paint.PaintOp{Rect: rect}.Add(ops)
+            paint.PaintOp{}.Add(ops)
 
             // device independent content rect calculation
-            pt32 := func(x, y unit.Value) f32.Point {
-                return f32.Pt(float32(frame.Metric.Px(x)), float32(frame.Metric.Px(y)))
-            }
-            margin := pt32(unit.Dp(12), unit.Dp(12))
-            lefttop := pt32(frame.Insets.Left, frame.Insets.Top).Add(margin)
-            rightbottom := pt32(frame.Insets.Right, frame.Insets.Bottom).Add(margin)
-            rect = f32.Rectangle{Min: rect.Min.Add(lefttop), Max: rect.Max.Sub(rightbottom)}
+            margin := unit.Dp(12)
+            minX := unit.Add(frame.Metric, margin, frame.Insets.Left)
+            minY := unit.Add(frame.Metric, margin, frame.Insets.Top)
+            maxX := unit.Add(frame.Metric, unit.Px(float32(frame.Size.X)), frame.Insets.Right.Scale(-1), margin.Scale(-1))
+            maxY := unit.Add(frame.Metric, unit.Px(float32(frame.Size.Y)), frame.Insets.Bottom.Scale(-1), margin.Scale(-1))
+            contentRect := f32.Rect(
+                float32(frame.Metric.Px(minX)), float32(frame.Metric.Px(minY)),
+                float32(frame.Metric.Px(maxX)), float32(frame.Metric.Px(maxY)))
 
             // fill content rect
-            op.Offset(rect.Min).Add(ops)
-            rect = f32.Rectangle{Max: rect.Size()}
             paint.ColorOp{Color: colornames.Grey300}.Add(ops)
-            paint.PaintOp{Rect: rect}.Add(ops)
+            stack := op.Push(ops)
+            op.Offset(contentRect.Min).Add(ops)
+            clip.Rect(image.Rect(0, 0, int(contentRect.Dx()), int(contentRect.Dy()))).Add(ops)
+            paint.PaintOp{}.Add(ops)
+            stack.Pop()
 
             // select next icon and paint
             n := uint(len(IconCollection))
             ico := IconCollection[(uint(index)+n)%n]
             index++
             start := time.Now()
-            if callOp, err := icon.FromData(ico.data, colornames.LightBlue600, rect, icon.AspectMeet, icon.Mid, icon.Mid, rasterizer); err == nil {
+            icon, err := icon.New(ico.data)
+            if err != nil {
+                log.Fatal(err)
+            }
+            viewRect := icon.AspectMeet(contentRect, 0.5, 0.5)
+            if callOp, err := rasterizer.Rasterize(icon, viewRect, colornames.LightBlue600); err == nil {
                 callOp.Add(ops)
             } else {
                 log.Fatal(err)
             }
-            switch rasterizer {
-            case icon.GioRasterizer:
-                PrintText(fmt.Sprintf("Gio (%v)", time.Since(start).Round(time.Microsecond)), rect.Min, 0.0, 0.0, rect.Dx(), H5, ops)
-            case icon.VecRasterizer:
-                PrintText(fmt.Sprintf("Vec (%v)", time.Since(start).Round(time.Millisecond)), rect.Min, 0.0, 0.0, rect.Dx(), H5, ops)
-            }
+            msg := fmt.Sprintf("%s (%v)", rasterizer.Name(), time.Since(start).Round(time.Microsecond))
+            PrintText(msg, contentRect.Min, 0.0, 0.0, contentRect.Dx(), H5, ops)
 
             at := time.Now().Add(500 * time.Millisecond)
-            op.InvalidateOp{At:at}.Add(ops)
+            op.InvalidateOp{At: at}.Add(ops)
             frame.Frame(ops)
         }
     }

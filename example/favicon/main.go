@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/draw"
+	"log"
 	"os"
 	"time"
 
@@ -17,14 +17,13 @@ import (
 	"gioui.org/io/pointer"
 	"gioui.org/io/system"
 	"gioui.org/op"
+	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 
 	"github.com/reactivego/ivg"
 	"github.com/reactivego/ivg/generate"
-	"github.com/reactivego/ivg/raster/gio"
-	"github.com/reactivego/ivg/raster/vec"
-	"github.com/reactivego/ivg/render"
+	"github.com/reactivego/ivg/icon"
 )
 
 func main() {
@@ -37,72 +36,63 @@ func Favicon() {
 		app.Title("IVG - Favicon"),
 		app.Size(unit.Dp(768), unit.Dp(768)),
 	)
-	const (
-		Gio = iota
-		Vec
-	)
-	rasterizer := Gio
+	rasterizer := icon.Rasterizer(icon.GioRasterizer)
+	favicon := FaviconImage{}
 	ops := new(op.Ops)
 	backdrop := new(int)
 	for next := range window.Events() {
 		if frame, ok := next.(system.FrameEvent); ok {
 			ops.Reset()
 
-			// initial window rect in pixels
-			rect := f32.Rect(0, 0, float32(frame.Size.X), float32(frame.Size.Y))
-
-			// backdrop switch renderer on release and fill rectangle
+			// clicking on backdrop will switch active renderer
 			pointer.InputOp{Tag: backdrop, Types: pointer.Release}.Add(ops)
 			for _, next := range frame.Queue.Events(backdrop) {
 				if event, ok := next.(pointer.Event); ok {
 					if event.Type == pointer.Release {
 						switch rasterizer {
-						case Gio:
-							rasterizer = Vec
-						case Vec:
-							rasterizer = Gio
+						case icon.GioRasterizer:
+							rasterizer = icon.VecRasterizer
+						case icon.VecRasterizer:
+							rasterizer = icon.GioRasterizer
 						}
 					}
 				}
 			}
+
+			// fill the whole backdrop rectangle
 			paint.ColorOp{Color: colornames.Grey800}.Add(ops)
-			paint.PaintOp{Rect: rect}.Add(ops)
+			paint.PaintOp{}.Add(ops)
 
 			// device independent content rect calculation
-			pt32 := func(x, y unit.Value) f32.Point {
-				return f32.Pt(float32(frame.Metric.Px(x)), float32(frame.Metric.Px(y)))
-			}
-			margin := pt32(unit.Dp(12), unit.Dp(12))
-			lefttop := pt32(frame.Insets.Left, frame.Insets.Top).Add(margin)
-			rightbottom := pt32(frame.Insets.Right, frame.Insets.Bottom).Add(margin)
-			rect = f32.Rectangle{Min: rect.Min.Add(lefttop), Max: rect.Max.Sub(rightbottom)}
+			margin := unit.Dp(12)
+			minX := unit.Add(frame.Metric, margin, frame.Insets.Left)
+			minY := unit.Add(frame.Metric, margin, frame.Insets.Top)
+			maxX := unit.Add(frame.Metric, unit.Px(float32(frame.Size.X)), frame.Insets.Right.Scale(-1), margin.Scale(-1))
+			maxY := unit.Add(frame.Metric, unit.Px(float32(frame.Size.Y)), frame.Insets.Bottom.Scale(-1), margin.Scale(-1))
+			contentRect := f32.Rect(
+				float32(frame.Metric.Px(minX)), float32(frame.Metric.Px(minY)),
+				float32(frame.Metric.Px(maxX)), float32(frame.Metric.Px(maxY)))
 
 			// fill content rect
-			op.Offset(rect.Min).Add(ops)
-			rect = f32.Rectangle{Max: rect.Size()}
+			stack := op.Push(ops)
 			paint.ColorOp{Color: colornames.Grey300}.Add(ops)
-			paint.PaintOp{Rect: rect}.Add(ops)
+			op.Offset(contentRect.Min).Add(ops)
+			clip.Rect(image.Rect(0, 0, int(contentRect.Dx()), int(contentRect.Dy()))).Add(ops)
+			paint.PaintOp{}.Add(ops)
+			stack.Pop()
+
+			// scale the viewbox of the icon to the content rect
+			viewRect := favicon.AspectMeet(contentRect, 0.5, 0.5)
 
 			// render actual content
-			viewrect := ViewBox.SizeToRect(ivg.Rect(rect.Min.X, rect.Min.Y, rect.Max.X, rect.Max.Y), ivg.AspectMeet, ivg.Mid, ivg.Mid)
-			bounds := image.Rect(viewrect.IntFields())
-			rect = f32.Rect(viewrect.Fields())
-			renderer := &render.Renderer{}
-			switch rasterizer {
-			case Gio:
-				start := time.Now()
-				renderer.SetRasterizer(&gio.Rasterizer{Ops: ops}, bounds)
-				Render(renderer, ViewBox)
-				PrintText(fmt.Sprintf("Gio (%v)", time.Since(start).Round(time.Microsecond)), rect.Min, 0.0, 0.0, rect.Dx(), H5, ops)
-			case Vec:
-				start := time.Now()
-				dst := image.NewRGBA(bounds)
-				renderer.SetRasterizer(&vec.Rasterizer{Dst: dst, DrawOp: draw.Src}, bounds)
-				Render(renderer, ViewBox)
-				paint.NewImageOp(dst).Add(ops)
-				paint.PaintOp{Rect: rect}.Add(ops)
-				PrintText(fmt.Sprintf("Vec (%v)", time.Since(start).Round(time.Millisecond)), rect.Min, 0.0, 0.0, rect.Dx(), H5, ops)
+			start := time.Now()
+			if callOp, err := rasterizer.Rasterize(favicon, viewRect); err == nil {
+				callOp.Add(ops)
+			} else {
+				log.Fatal(err)
 			}
+			msg := fmt.Sprintf("%s (%v)", rasterizer.Name(), time.Since(start).Round(time.Microsecond))
+			PrintText(msg, contentRect.Min, 0.0, 0.0, contentRect.Dx(), H5, ops)
 
 			frame.Frame(ops)
 		}
@@ -110,25 +100,30 @@ func Favicon() {
 	os.Exit(0)
 }
 
-var ViewBox = ivg.ViewBox{
+type FaviconImage struct{}
+
+var FaviconViewBox = ivg.ViewBox{
 	MinX: 0, MinY: 0,
 	MaxX: +48, MaxY: +48,
 }
 
-func Render(renderer ivg.Destination, viewbox ivg.ViewBox) {
+func (f FaviconImage) AspectMeet(rect f32.Rectangle, ax, ay float32) f32.Rectangle {
+	return f32.Rect(FaviconViewBox.AspectMeet(rect.Min.X, rect.Min.Y, rect.Max.X, rect.Max.Y, ax, ay))
+}
 
+func (f FaviconImage) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
 	// Uncomment lines below to log rasterizer calls.
 	// logger := &raster.RasterizerLogger{Rasterizer: rasterizer}
 	// renderer.SetRasterizer(logger, bounds)
 
 	gen := generate.Generator{}
-	gen.SetDestination(renderer)
+	gen.SetDestination(dst)
 
 	// Uncomment lines below to log destination calls.
 	// logger := &ivg.DestinationLogger{Destination: renderer}
 	// gen.SetDestination(logger)
 
-	gen.Reset(viewbox, &ivg.DefaultPalette)
+	gen.Reset(FaviconViewBox, &ivg.DefaultPalette)
 
 	colors := []color.RGBA{
 		{0x76, 0xe1, 0xfe, 0xff}, // 0
@@ -220,4 +215,6 @@ func Render(renderer ivg.Destination, viewbox ivg.ViewBox) {
 		}
 		gen.SetPathData(path.d, adj, true)
 	}
+
+	return nil
 }

@@ -17,47 +17,6 @@ const (
 	MidSuggestedPalette = 1
 )
 
-// Rectangle is defined by its minimum and maximum coordinates.
-type Rectangle struct {
-	MinX, MinY, MaxX, MaxY float32
-}
-
-// Rect returns a rectangle for the given minX, minY, maxX and maxY float32
-// arguments.
-func Rect(minX, minY, maxX, maxY float32) Rectangle {
-	return Rectangle{minX, minY, maxX, maxY}
-}
-
-// Fields returns the individual fields of the rectangle as multiple
-// float32 return arguments.
-func (r Rectangle) Fields() (MinX, MinY, MaxX, MaxY float32) {
-	return r.MinX, r.MinY, r.MaxX, r.MaxY
-}
-
-// Size returns the Rectangles's size in both dimensions.
-func (r Rectangle) Size() (dx, dy float32) {
-	return r.MaxX - r.MinX, r.MaxY - r.MinY
-}
-
-// IntFields returns the individual fields of the rectangle as multiple
-// int return arguments by truncating the float32 to int.
-func (r Rectangle) IntFields() (MinX, MinY, MaxX, MaxY int) {
-	return int(r.MinX), int(r.MinY), int(r.MaxX), int(r.MaxY)
-}
-
-// PreserveAspectRatio is the SVG attribute 'PreserveAspectRatio' which
-// determines how the ViewBox is sized w.r.t. a bounding rectangle.
-type PreserveAspectRatio int
-
-const (
-	// AspectNone stretches or squashes the ViewBox to meet the rect.
-	AspectNone PreserveAspectRatio = iota
-	// AspectMeet fits the ViewBox inside the rect maintaining its aspect ratio.
-	AspectMeet
-	// AspectSlice fills the rect maintaining the ViewBox's aspect ratio.
-	AspectSlice
-)
-
 const (
 	// Min aligns min of ViewBox with min of rect
 	Min = 0.0
@@ -68,43 +27,56 @@ const (
 )
 
 // ViewBox is a Rectangle
-type ViewBox Rectangle
+type ViewBox struct {
+	MinX, MinY, MaxX, MaxY float32
+}
 
 // Size returns the ViewBox's size in both dimensions. An IconVG graphic is
 // scalable; these dimensions do not necessarily map 1:1 to pixels.
-func (v *ViewBox) Size() (dx, dy float32) {
+func (v ViewBox) Size() (dx, dy float32) {
 	return v.MaxX - v.MinX, v.MaxY - v.MinY
 }
 
-// SizeToRect resizes and positions the viewbox in the given rect. The aspect
-// argument determines how the ViewBox is positioned in the rect. The ax, ay
-// argument determine the position of the resized viewbox in the given rect.
-// For example ax = Mid, ay = Mid will position the resized viewbox always in
-// the middle of the rect
-func (v *ViewBox) SizeToRect(rect Rectangle, aspect PreserveAspectRatio, ax, ay float32) Rectangle {
-	rdx, rdy := rect.Size()
+// AspectMeet fits the ViewBox inside the rect maintaining its aspect ratio.
+// The ax, ay argument determine the position of the resized viewbox in the
+// given rect. For example ax = Mid, ay = Mid will position the resized
+// viewbox always in the middle of the rect
+func (v ViewBox) AspectMeet(minX, minY, maxX, maxY float32, ax, ay float32) (MinX, MinY, MaxX, MaxY float32) {
+	rdx, rdy := maxX-minX, maxY-minY
 	vdx, vdy := v.Size()
 	vbAR := vdx / vdy
 	vdx, vdy = rdx, rdy
-	switch aspect {
-	case AspectMeet:
-		if vdx/vdy < vbAR {
-			vdy = vdx / vbAR
-		} else {
-			vdx = vdy * vbAR
-		}
-	case AspectSlice:
-		if vdx/vdy < vbAR {
-			vdx = vdy * vbAR
-		} else {
-			vdy = vdx / vbAR
-		}
+	if vdx/vdy < vbAR {
+		vdy = vdx / vbAR
+	} else {
+		vdx = vdy * vbAR
 	}
-	rect.MinX += (rdx - vdx) * ax
-	rect.MaxX = rect.MinX + vdx
-	rect.MinY += (rdy - vdy) * ay
-	rect.MaxY = rect.MinY + vdy
-	return rect
+	minX += (rdx - vdx) * ax
+	maxX = minX + vdx
+	minY += (rdy - vdy) * ay
+	maxY = minY + vdy
+	return minX, minY, maxX, maxY
+}
+
+// AspectSlice fills the rect maintaining the ViewBox's aspect ratio. The ax,
+// ay argument determine the position of the resized viewbox in the given
+// rect. For example ax = Mid, ay = Mid will position the resized viewbox
+// always in the middle of the rect
+func (v ViewBox) AspectSlice(minX, minY, maxX, maxY float32, ax, ay float32) (MinX, MinY, MaxX, MaxY float32) {
+	rdx, rdy := maxX-minX, maxY-minY
+	vdx, vdy := v.Size()
+	vbAR := vdx / vdy
+	vdx, vdy = rdx, rdy
+	if vdx/vdy < vbAR {
+		vdx = vdy * vbAR
+	} else {
+		vdy = vdx / vbAR
+	}
+	minX += (rdx - vdx) * ax
+	maxX = minX + vdx
+	minY += (rdy - vdy) * ay
+	maxY = minY + vdy
+	return minX, minY, maxX, maxY
 }
 
 // Metadata is an IconVG's metadata.

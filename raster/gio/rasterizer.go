@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	MinFloat32 = float32(math.Inf(-1))
-	MaxFloat32 = float32(math.Inf(1))
+	MinInf = float32(math.Inf(-1))
+	MaxInf = float32(math.Inf(1))
 )
 
 type Rasterizer struct {
@@ -37,10 +37,10 @@ func NewRasterizer(ops *op.Ops, w, h int) *Rasterizer {
 	v := &Rasterizer{
 		Ops:  ops,
 		size: image.Pt(w, h),
-		minX: MaxFloat32,
-		minY: MaxFloat32,
-		maxX: MinFloat32,
-		maxY: MinFloat32,
+		minX: MaxInf,
+		minY: MaxInf,
+		maxX: MinInf,
+		maxY: MinInf,
 	}
 	return v
 }
@@ -58,7 +58,7 @@ func (v *Rasterizer) Path() *clip.Path {
 
 func (v *Rasterizer) Op() clip.Op {
 	if v.path != nil {
-		v.clipOp = v.path.End()
+		v.clipOp = v.path.Outline()
 		v.path = nil
 	}
 	return v.clipOp
@@ -68,8 +68,8 @@ func (v *Rasterizer) Reset(w, h int) {
 	v.size = image.Pt(w, h)
 	v.first.x, v.first.y = 0, 0
 	v.pen.x, v.pen.y = 0, 0
-	v.minX, v.minY = MaxFloat32, MaxFloat32
-	v.maxX, v.maxY = MinFloat32, MinFloat32
+	v.minX, v.minY = MaxInf, MaxInf
+	v.maxX, v.maxY = MinInf, MinInf
 	v.Op()
 }
 
@@ -89,16 +89,16 @@ func (v *Rasterizer) To(x, y float32) f32.Point {
 	p := f32.Pt(x-v.pen.x, y-v.pen.y)
 	v.pen.x, v.pen.y = x, y
 	if x < v.minX {
-		v.minX = x
+		v.minX = float32(math.Floor(float64(x)))
 	}
 	if x > v.maxX {
-		v.maxX = x
+		v.maxX = float32(math.Ceil(float64(x)))
 	}
 	if y < v.minY {
-		v.minY = y
+		v.minY = float32(math.Floor(float64(y)))
 	}
 	if y > v.maxY {
-		v.maxY = y
+		v.maxY = float32(math.Ceil(float64(y)))
 	}
 	return p
 }
@@ -144,8 +144,7 @@ func (v *Rasterizer) Draw(r image.Rectangle, src image.Image, sp image.Point) {
 	clip.Add(v.Ops)
 	switch source := src.(type) {
 	case raster.GradientConfig:
-		gradrect := image.Rect(0, 0, r.Dx(), r.Dy())
-		gradient := image.NewRGBA(gradrect)
+		gradient := image.NewRGBA(image.Rect(0, 0, r.Dx(), r.Dy()))
 		destrect := image.Rect(int(v.minX), int(v.minY), int(v.maxX), int(v.maxY))
 		draw.Draw(gradient, destrect, src, destrect.Min.Add(sp), draw.Src)
 		paint.NewImageOp(gradient).Add(v.Ops)
@@ -155,7 +154,6 @@ func (v *Rasterizer) Draw(r image.Rectangle, src image.Image, sp image.Point) {
 	default:
 		paint.NewImageOp(src).Add(v.Ops)
 	}
-	rect := f32.Rect(0, 0, float32(r.Dx()), float32(r.Dy()))
-	paint.PaintOp{Rect: rect}.Add(v.Ops)
+	paint.PaintOp{}.Add(v.Ops)
 	stack.Pop()
 }
