@@ -58,7 +58,7 @@ func (v *Rasterizer) Path() *clip.Path {
 
 func (v *Rasterizer) Op() clip.Op {
 	if v.path != nil {
-		v.clipOp = v.path.Outline()
+		v.clipOp = clip.Outline{Path:v.path.End()}.Op()
 		v.path = nil
 	}
 	return v.clipOp
@@ -144,12 +144,14 @@ func (v *Rasterizer) Draw(r image.Rectangle, src image.Image, sp image.Point) {
 	clip.Add(v.Ops)
 	switch source := src.(type) {
 	case raster.GradientConfig:
+		// TODO: If the gradient contains translucent colors they should be 
+		// converted using the RGBAModel from this package.
 		gradient := image.NewRGBA(image.Rect(0, 0, r.Dx(), r.Dy()))
 		destrect := image.Rect(int(v.minX), int(v.minY), int(v.maxX), int(v.maxY))
 		draw.Draw(gradient, destrect, src, destrect.Min.Add(sp), draw.Src)
 		paint.NewImageOp(gradient).Add(v.Ops)
 	case *image.Uniform:
-		c := RGBAModel.Convert(source.C).(color.RGBA)
+		c := color.NRGBAModel.Convert(source.C).(color.NRGBA)
 		paint.ColorOp{Color: c}.Add(v.Ops)
 	default:
 		paint.NewImageOp(src).Add(v.Ops)

@@ -38,6 +38,10 @@ func Favicon() {
 	)
 	rasterizer := icon.Rasterizer(icon.GioRasterizer)
 	favicon := FaviconImage{}
+
+	Grey300 := color.NRGBAModel.Convert(colornames.Grey300).(color.NRGBA)
+	Grey800 := color.NRGBAModel.Convert(colornames.Grey800).(color.NRGBA)
+
 	ops := new(op.Ops)
 	backdrop := new(int)
 	for next := range window.Events() {
@@ -60,7 +64,7 @@ func Favicon() {
 			}
 
 			// fill the whole backdrop rectangle
-			paint.ColorOp{Color: colornames.Grey800}.Add(ops)
+			paint.ColorOp{Color: Grey800}.Add(ops)
 			paint.PaintOp{}.Add(ops)
 
 			// device independent content rect calculation
@@ -75,7 +79,7 @@ func Favicon() {
 
 			// fill content rect
 			stack := op.Push(ops)
-			paint.ColorOp{Color: colornames.Grey300}.Add(ops)
+			paint.ColorOp{Color: Grey300}.Add(ops)
 			op.Offset(contentRect.Min).Add(ops)
 			clip.Rect(image.Rect(0, 0, int(contentRect.Dx()), int(contentRect.Dy()))).Add(ops)
 			paint.PaintOp{}.Add(ops)

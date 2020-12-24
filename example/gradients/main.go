@@ -37,6 +37,8 @@ func Gradients() {
 		app.Size(unit.Dp(768), unit.Dp(768)),
 	)
 	rasterizer := icon.Rasterizer(icon.GioRasterizer)
+	Grey300 := color.NRGBAModel.Convert(colornames.Grey300).(color.NRGBA)
+	Grey800 := color.NRGBAModel.Convert(colornames.Grey800).(color.NRGBA)
 	gradients := GradientsImage{}
 	ops := new(op.Ops)
 	backdrop := new(int)
@@ -60,7 +62,7 @@ func Gradients() {
 			}
 
 			// fill the whole backdrop rectangle
-			paint.ColorOp{Color: colornames.Grey800}.Add(ops)
+			paint.ColorOp{Color: Grey800}.Add(ops)
 			paint.PaintOp{}.Add(ops)
 
 			// device independent content rect calculation
@@ -75,7 +77,7 @@ func Gradients() {
 
 			// fill content rect
 			stack := op.Push(ops)
-			paint.ColorOp{Color: colornames.Grey300}.Add(ops)
+			paint.ColorOp{Color: Grey300}.Add(ops)
 			op.Offset(contentRect.Min).Add(ops)
 			clip.Rect(image.Rect(0, 0, int(contentRect.Dx()), int(contentRect.Dy()))).Add(ops)
 			paint.PaintOp{}.Add(ops)

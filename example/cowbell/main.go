@@ -61,8 +61,11 @@ func Cowbell() {
 				}
 			}
 
+			grey300 := color.NRGBAModel.Convert(colornames.Grey300).(color.NRGBA)
+			grey800 := color.NRGBAModel.Convert(colornames.Grey800).(color.NRGBA)
+
 			// fill the whole backdrop rectangle
-			paint.ColorOp{Color: colornames.Grey800}.Add(ops)
+			paint.ColorOp{Color: grey800}.Add(ops)
 			paint.PaintOp{}.Add(ops)
 
 			// device independent content rect calculation
@@ -77,7 +80,7 @@ func Cowbell() {
 
 			// fill content rect
 			stack := op.Push(ops)
-			paint.ColorOp{Color: colornames.Grey300}.Add(ops)
+			paint.ColorOp{Color: grey300}.Add(ops)
 			op.Offset(contentRect.Min).Add(ops)
 			clip.Rect(image.Rect(0, 0, int(contentRect.Dx()), int(contentRect.Dy()))).Add(ops)
 			paint.PaintOp{}.Add(ops)

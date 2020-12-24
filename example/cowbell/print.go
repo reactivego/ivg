@@ -7,7 +7,6 @@ import (
 	"image/color"
 	"sync"
 
-	"golang.org/x/exp/shiny/materialdesign/colornames"
 	"golang.org/x/image/math/fixed"
 
 	"eliasnaur.com/font/roboto/robotoblack"
@@ -84,23 +83,24 @@ var (
 type TextStyle struct {
 	Font  text.Font
 	Size  int
-	Color color.RGBA
+	Color color.NRGBA
 }
 
 var (
-	H1        = TextStyle{RobotoThin, 96, colornames.Black}   // w300
-	H2        = TextStyle{RobotoLight, 60, colornames.Black}  // w300
-	H3        = TextStyle{RobotoNormal, 48, colornames.Black} // w400
-	H4        = TextStyle{RobotoNormal, 34, colornames.Black} // w400
-	H5        = TextStyle{RobotoNormal, 24, colornames.Black} // w400
-	H6        = TextStyle{RobotoMedium, 20, colornames.Black} // w500
-	Subtitle1 = TextStyle{RobotoNormal, 16, colornames.Black} // w400
-	Subtitle2 = TextStyle{RobotoMedium, 14, colornames.Black} // w500
-	BodyText1 = TextStyle{RobotoNormal, 16, colornames.Black} // w400
-	BodyText2 = TextStyle{RobotoNormal, 14, colornames.Black} // w400
-	Button    = TextStyle{RobotoMedium, 14, colornames.Black} // w500
-	Caption   = TextStyle{RobotoNormal, 12, colornames.Black} // w400
-	Overline  = TextStyle{RobotoNormal, 10, colornames.Black} // w400
+	Black     = color.NRGBA{0, 0, 0, 255}
+	H1        = TextStyle{RobotoThin, 96, Black}   // w300
+	H2        = TextStyle{RobotoLight, 60, Black}  // w300
+	H3        = TextStyle{RobotoNormal, 48, Black} // w400
+	H4        = TextStyle{RobotoNormal, 34, Black} // w400
+	H5        = TextStyle{RobotoNormal, 24, Black} // w400
+	H6        = TextStyle{RobotoMedium, 20, Black} // w500
+	Subtitle1 = TextStyle{RobotoNormal, 16, Black} // w400
+	Subtitle2 = TextStyle{RobotoMedium, 14, Black} // w500
+	BodyText1 = TextStyle{RobotoNormal, 16, Black} // w400
+	BodyText2 = TextStyle{RobotoNormal, 14, Black} // w400
+	Button    = TextStyle{RobotoMedium, 14, Black} // w500
+	Caption   = TextStyle{RobotoNormal, 12, Black} // w400
+	Overline  = TextStyle{RobotoNormal, 10, Black} // w400
 )
 
 var shaper = text.NewCache(RobotoFontFaces())
@@ -114,15 +114,13 @@ func PrintText(txt string, pt f32.Point, ax, ay, width float32, style TextStyle,
 			dx = lineWidth
 		}
 	}
-	txtPos := 0
 	offset := f32.Pt(pt.X-ax*dx, pt.Y-ay*dy)
 	for _, line := range lines {
 		stack := op.Push(ops)
 		offset.Y += float32(line.Ascent.Ceil())
 		op.Offset(offset).Add(ops)
 		offset.Y += float32(line.Descent.Ceil())
-		shaper.ShapeString(style.Font, fixed.I(style.Size), txt[txtPos:txtPos+line.Len], line.Layout).Add(ops)
-		txtPos += line.Len
+		shaper.Shape(style.Font, fixed.I(style.Size), line.Layout).Add(ops)
 		paint.ColorOp{Color: style.Color}.Add(ops)
 		paint.PaintOp{}.Add(ops)
 		stack.Pop()

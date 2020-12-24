@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"log"
 	"os"
 	"time"
@@ -34,6 +35,8 @@ func Icons() {
 		app.Size(unit.Dp(768), unit.Dp(768)),
 	)
 	var rasterizer icon.Rasterizer = icon.GioRasterizer
+	Grey300 := color.NRGBAModel.Convert(colornames.Grey300).(color.NRGBA)
+	Grey800 := color.NRGBAModel.Convert(colornames.Grey800).(color.NRGBA)
 	ops := new(op.Ops)
 	backdrop := new(int)
 	index := 0
@@ -57,7 +60,7 @@ func Icons() {
 			}
 
 			// fill the whole backdrop rectangle
-			paint.ColorOp{Color: colornames.Grey800}.Add(ops)
+			paint.ColorOp{Color: Grey800}.Add(ops)
 			paint.PaintOp{}.Add(ops)
 
 			// device independent content rect calculation
@@ -71,7 +74,7 @@ func Icons() {
 				float32(frame.Metric.Px(maxX)), float32(frame.Metric.Px(maxY)))
 
 			// fill content rect
-			paint.ColorOp{Color: colornames.Grey300}.Add(ops)
+			paint.ColorOp{Color: Grey300}.Add(ops)
 			stack := op.Push(ops)
 			op.Offset(contentRect.Min).Add(ops)
 			clip.Rect(image.Rect(0, 0, int(contentRect.Dx()), int(contentRect.Dy()))).Add(ops)

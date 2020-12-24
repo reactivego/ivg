@@ -17,8 +17,6 @@ import (
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
-
-	"github.com/reactivego/ivg/raster/gio"
 )
 
 func main() {
@@ -43,21 +41,21 @@ func Blend() {
 
 			// Use special gio color model to pre-multiply color for correctly blending
 			// highlight color over opaque yellow background color using gio.
-			RGBA := func(c color.Color) color.RGBA {
-				return gio.RGBAModel.Convert(c).(color.RGBA)
+			NRGBA := func(c color.Color) color.NRGBA {
+				return color.NRGBAModel.Convert(c).(color.NRGBA)
 			}
 			upper := f32.Rect(0, 0, dx, dy/2)
 			stack := op.Push(ops)
-			paint.ColorOp{Color: RGBA(yellow)}.Add(ops)
+			paint.ColorOp{Color: NRGBA(yellow)}.Add(ops)
 			clip.Rect(image.Rect(0, 0, int(upper.Dx()), int(upper.Dy()))).Add(ops)
 			paint.PaintOp{}.Add(ops)
-			paint.ColorOp{Color: RGBA(highlight)}.Add(ops)
+			paint.ColorOp{Color: NRGBA(highlight)}.Add(ops)
 			paint.PaintOp{}.Add(ops)
 			stack.Pop()
 
 			// Using image/vector rasterizer to blend highlight color over opaque
 			// yellow background color.
-			RGBA = func(c color.Color) color.RGBA {
+			RGBA := func(c color.Color) color.RGBA {
 				return color.RGBAModel.Convert(c).(color.RGBA)
 			}
 			lower := f32.Rect(0, dy/2, dx, dy)
