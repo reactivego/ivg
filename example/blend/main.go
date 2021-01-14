@@ -45,13 +45,13 @@ func Blend() {
 				return color.NRGBAModel.Convert(c).(color.NRGBA)
 			}
 			upper := f32.Rect(0, 0, dx, dy/2)
-			stack := op.Push(ops)
+			state := op.Save(ops)
 			paint.ColorOp{Color: NRGBA(yellow)}.Add(ops)
 			clip.Rect(image.Rect(0, 0, int(upper.Dx()), int(upper.Dy()))).Add(ops)
 			paint.PaintOp{}.Add(ops)
 			paint.ColorOp{Color: NRGBA(highlight)}.Add(ops)
 			paint.PaintOp{}.Add(ops)
-			stack.Pop()
+			state.Load()
 
 			// Using image/vector rasterizer to blend highlight color over opaque
 			// yellow background color.
@@ -72,12 +72,12 @@ func Blend() {
 			src = image.NewUniform(RGBA(highlight))
 			z.DrawOp = draw.Over
 			z.Draw(dst, dst.Bounds(), src, src.Bounds().Min)
-			stack = op.Push(ops)
+			state = op.Save(ops)
 			paint.NewImageOp(dst).Add(ops)
 			op.Offset(lower.Min).Add(ops)
 			clip.Rect(image.Rect(0, 0, int(lower.Dx()), int(lower.Dy()))).Add(ops)
 			paint.PaintOp{}.Add(ops)
-			stack.Pop()
+			state.Load()
 
 			frame.Frame(ops)
 		}

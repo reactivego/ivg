@@ -116,14 +116,14 @@ func PrintText(txt string, pt f32.Point, ax, ay, width float32, style TextStyle,
 	}
 	offset := f32.Pt(pt.X-ax*dx, pt.Y-ay*dy)
 	for _, line := range lines {
-		stack := op.Push(ops)
+		state := op.Save(ops)
 		offset.Y += float32(line.Ascent.Ceil())
 		op.Offset(offset).Add(ops)
 		offset.Y += float32(line.Descent.Ceil())
 		shaper.Shape(style.Font, fixed.I(style.Size), line.Layout).Add(ops)
 		paint.ColorOp{Color: style.Color}.Add(ops)
 		paint.PaintOp{}.Add(ops)
-		stack.Pop()
+		state.Load()
 	}
 	return
 }

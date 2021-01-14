@@ -139,7 +139,7 @@ func (v *Rasterizer) ClosePath() {
 
 func (v *Rasterizer) Draw(r image.Rectangle, src image.Image, sp image.Point) {
 	clip := v.Op()
-	stack := op.Push(v.Ops)
+	state := op.Save(v.Ops)
 	op.Offset(f32.Pt(float32(r.Min.X), float32(r.Min.Y))).Add(v.Ops)
 	clip.Add(v.Ops)
 	switch source := src.(type) {
@@ -157,5 +157,5 @@ func (v *Rasterizer) Draw(r image.Rectangle, src image.Image, sp image.Point) {
 		paint.NewImageOp(src).Add(v.Ops)
 	}
 	paint.PaintOp{}.Add(v.Ops)
-	stack.Pop()
+	state.Load()
 }

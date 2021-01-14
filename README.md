@@ -263,11 +263,11 @@ func Icons() {
 
             // fill content rect
             paint.ColorOp{Color: colornames.Grey300}.Add(ops)
-            stack := op.Push(ops)
+            state := op.Save(ops)
             op.Offset(contentRect.Min).Add(ops)
             clip.Rect(image.Rect(0, 0, int(contentRect.Dx()), int(contentRect.Dy()))).Add(ops)
             paint.PaintOp{}.Add(ops)
-            stack.Pop()
+            state.Load()
 
             // select next icon and paint
             n := uint(len(IconCollection))

@@ -78,12 +78,12 @@ func Favicon() {
 				float32(frame.Metric.Px(maxX)), float32(frame.Metric.Px(maxY)))
 
 			// fill content rect
-			stack := op.Push(ops)
+			state := op.Save(ops)
 			paint.ColorOp{Color: Grey300}.Add(ops)
 			op.Offset(contentRect.Min).Add(ops)
 			clip.Rect(image.Rect(0, 0, int(contentRect.Dx()), int(contentRect.Dy()))).Add(ops)
 			paint.PaintOp{}.Add(ops)
-			stack.Pop()
+			state.Load()
 
 			// scale the viewbox of the icon to the content rect
 			viewRect := favicon.AspectMeet(contentRect, 0.5, 0.5)
