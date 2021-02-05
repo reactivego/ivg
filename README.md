@@ -2,8 +2,7 @@
 
     import "github.com/reactivego/ivg"
 
-[![](../assets/godev.svg?raw=true)](https://pkg.go.dev/github.com/reactivego/ivg?tab=doc)
-[![](../assets/godoc.svg?raw=true)](https://godoc.org/github.com/reactivego/ivg)
+[![Go Reference](https://pkg.go.dev/badge/github.com/reactivego/ivg.svg)](https://pkg.go.dev/github.com/reactivego/ivg#section-documentation)
 
 [Gio](https://gioui.org) (immediate mode GUI in Go) uses [IconVG](https://golang.org/x/exp/shiny/iconvg) (binary format for simple vector graphic icons).
 This code is a refactoring of the IconVG code. It removes the need for rendering to an intermediate RGBA image. Instead it uses Gio `clip.Path` functionality.
