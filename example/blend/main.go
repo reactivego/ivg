@@ -36,20 +36,17 @@ func Blend() {
 
 			dx, dy := float32(frame.Size.X), float32(frame.Size.Y)
 
-			yellow := color.RGBA{0xfc, 0xe9, 0x4f, 0xff}
+			yellow := color.NRGBA{0xfc, 0xe9, 0x4f, 0xff}
 			highlight := color.NRGBA{0xfd, 0xee, 0x74, 0x7f}
 
-			// Use special gio color model to pre-multiply color for correctly blending
-			// highlight color over opaque yellow background color using gio.
-			NRGBA := func(c color.Color) color.NRGBA {
-				return color.NRGBAModel.Convert(c).(color.NRGBA)
-			}
+			// Using gio to blend highlight color over opaque
+			// yellow background color.
 			upper := f32.Rect(0, 0, dx, dy/2)
 			state := op.Save(ops)
-			paint.ColorOp{Color: NRGBA(yellow)}.Add(ops)
+			paint.ColorOp{Color: yellow}.Add(ops)
 			clip.Rect(image.Rect(0, 0, int(upper.Dx()), int(upper.Dy()))).Add(ops)
 			paint.PaintOp{}.Add(ops)
-			paint.ColorOp{Color: NRGBA(highlight)}.Add(ops)
+			paint.ColorOp{Color: highlight}.Add(ops)
 			paint.PaintOp{}.Add(ops)
 			state.Load()
 

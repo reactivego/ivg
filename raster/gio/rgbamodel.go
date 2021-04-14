@@ -8,7 +8,12 @@ import (
 )
 
 // RGBAModel is a color.Model that can convert any color.Color to a color.RGBA
-// that can be passed to Gio.
+// that can be passed to Gio. It will pre-multiply a translucent color in such
+// a way that it correctly blends over an opaque background color.
+//
+// Note: we keep this around to see if we need this when we use translucent
+// gradients. Because Gio now requires NRGBA colors the conversion that was
+// originally done here is done inside Gio.
 //
 //	yellow := color.NRGBA{0xfd, 0xee, 0x74, 0x7f}
 //	rgba := gio.RGBAModel.Convert(yellow).(color.RGBA)
