@@ -25,8 +25,6 @@ type Rasterizer struct {
 	Ops *op.Ops
 
 	size       image.Point
-	first      struct{ x, y float32 }
-	pen        struct{ x, y float32 }
 	path       *clip.Path
 	clipOp     clip.Op
 	minX, minY float32
@@ -58,7 +56,7 @@ func (v *Rasterizer) Path() *clip.Path {
 
 func (v *Rasterizer) Op() clip.Op {
 	if v.path != nil {
-		v.clipOp = clip.Outline{Path:v.path.End()}.Op()
+		v.clipOp = clip.Outline{Path: v.path.End()}.Op()
 		v.path = nil
 	}
 	return v.clipOp
@@ -66,8 +64,6 @@ func (v *Rasterizer) Op() clip.Op {
 
 func (v *Rasterizer) Reset(w, h int) {
 	v.size = image.Pt(w, h)
-	v.first.x, v.first.y = 0, 0
-	v.pen.x, v.pen.y = 0, 0
 	v.minX, v.minY = MaxInf, MaxInf
 	v.maxX, v.maxY = MinInf, MinInf
 	v.Op()
@@ -82,12 +78,11 @@ func (v *Rasterizer) Bounds() image.Rectangle {
 }
 
 func (v *Rasterizer) Pen() (x, y float32) {
-	return v.pen.x, v.pen.y
+	pos := v.path.Pos()
+	return pos.X, pos.Y
 }
 
 func (v *Rasterizer) To(x, y float32) f32.Point {
-	p := f32.Pt(x-v.pen.x, y-v.pen.y)
-	v.pen.x, v.pen.y = x, y
 	if x < v.minX {
 		v.minX = float32(math.Floor(float64(x)))
 	}
@@ -100,41 +95,27 @@ func (v *Rasterizer) To(x, y float32) f32.Point {
 	if y > v.maxY {
 		v.maxY = float32(math.Ceil(float64(y)))
 	}
-	return p
-}
-
-func (v *Rasterizer) To2(bx, by, cx, cy float32) (b, c f32.Point) {
-	b = f32.Pt(bx-v.pen.x, by-v.pen.y)
-	c = v.To(cx, cy)
-	return
-}
-
-func (v *Rasterizer) To3(bx, by, cx, cy, dx, dy float32) (b, c, d f32.Point) {
-	b = f32.Pt(bx-v.pen.x, by-v.pen.y)
-	c = f32.Pt(cx-v.pen.x, cy-v.pen.y)
-	d = v.To(dx, dy)
-	return
+	return f32.Pt(x, y)
 }
 
 func (v *Rasterizer) MoveTo(ax, ay float32) {
-	v.Path().Move(v.To(ax, ay))
-	v.first.x, v.first.y = ax, ay
+	v.Path().MoveTo(v.To(ax, ay))
 }
 
 func (v *Rasterizer) LineTo(bx, by float32) {
-	v.Path().Line(v.To(bx, by))
+	v.Path().LineTo(v.To(bx, by))
 }
 
 func (v *Rasterizer) QuadTo(bx, by, cx, cy float32) {
-	v.Path().Quad(v.To2(bx, by, cx, cy))
+	v.Path().QuadTo(f32.Pt(bx, by), v.To(cx, cy))
 }
 
 func (v *Rasterizer) CubeTo(bx, by, cx, cy, dx, dy float32) {
-	v.Path().Cube(v.To3(bx, by, cx, cy, dx, dy))
+	v.Path().CubeTo(f32.Pt(bx, by), f32.Pt(cx, cy), v.To(dx, dy))
 }
 
 func (v *Rasterizer) ClosePath() {
-	v.LineTo(v.first.x, v.first.y)
+	v.Path().Close()
 }
 
 func (v *Rasterizer) Draw(r image.Rectangle, src image.Image, sp image.Point) {
@@ -144,8 +125,8 @@ func (v *Rasterizer) Draw(r image.Rectangle, src image.Image, sp image.Point) {
 	clip.Add(v.Ops)
 	switch source := src.(type) {
 	case raster.GradientConfig:
-		// TODO: If the gradient contains translucent colors they should be 
-		// converted using the RGBAModel from this package.
+		// TODO: If the gradient contains translucent colors we probably still must
+		// convert the pixels using the RGBAModel from this package.
 		gradient := image.NewRGBA(image.Rect(0, 0, r.Dx(), r.Dy()))
 		destrect := image.Rect(int(v.minX), int(v.minY), int(v.maxX), int(v.maxY))
 		draw.Draw(gradient, destrect, src, destrect.Min.Add(sp), draw.Src)
