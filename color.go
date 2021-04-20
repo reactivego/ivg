@@ -279,5 +279,5 @@ func (c Color) String() string {
 		t, c0, c1 := c.blend()
 		return fmt.Sprintf("blend (%d:%d) (%v:%v)", 0xff-t, t, DecodeColor1(c0), DecodeColor1(c1))
 	}
-	return fmt.Sprintf("nonsensical color")
+	return "nonsensical color"
 }
