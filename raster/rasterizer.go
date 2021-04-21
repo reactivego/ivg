@@ -17,7 +17,7 @@ type Rasterizer interface {
 	// Size returns the width and height passed to NewRasterizer or Reset.
 	Size() image.Point
 	// Bounds returns the rectangle from (0, 0) to the width and height passed to
-	// NewRasterizer or Reset.
+	// Reset.
 	Bounds() image.Rectangle
 	// Pen returns the location of the path-drawing pen: the last argument to the
 	// most recent XxxTo call.

@@ -121,11 +121,6 @@ func (g GradientsImage) AspectMeet(rect f32.Rectangle, ax, ay float32) f32.Recta
 }
 
 func (g GradientsImage) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
-
-	// Uncomment lines below to log rasterizer calls.
-	// logger := &raster.RasterizerLogger{Rasterizer: rasterizer}
-	// renderer.SetRasterizer(logger, bounds)
-
 	gen := generate.Generator{}
 	gen.SetDestination(dst)
 

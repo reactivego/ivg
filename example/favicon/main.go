@@ -122,10 +122,6 @@ func (f FaviconImage) AspectMeet(rect f32.Rectangle, ax, ay float32) f32.Rectang
 }
 
 func (f FaviconImage) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
-	// Uncomment lines below to log rasterizer calls.
-	// logger := &raster.RasterizerLogger{Rasterizer: rasterizer}
-	// renderer.SetRasterizer(logger, bounds)
-
 	gen := generate.Generator{}
 	gen.SetDestination(dst)
 
