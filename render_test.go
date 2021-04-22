@@ -16,7 +16,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/reactivego/ivg"
 	"github.com/reactivego/ivg/decode"
 	"github.com/reactivego/ivg/raster/vec"
 	"github.com/reactivego/ivg/render"
@@ -123,18 +122,17 @@ func TestRenderer(t *testing.T) {
 				height = int(float32(length) * dy / dx)
 			}
 
-			opts := &decode.DecodeOptions{}
+			opts := []decode.DecodeOption{}
 			if variant == "pink" {
-				pal := ivg.DefaultPalette
-				pal[0] = color.RGBA{0xfe, 0x76, 0xea, 0xff}
-				opts.Palette = &pal
+				pink := color.RGBA{0xfe, 0x76, 0xea, 0xff}
+				opts = append(opts, decode.WithColorAt(0, pink))
 			}
 
 			bounds := image.Rect(0, 0, width, height)
 			got := image.NewRGBA(bounds)
 			var z render.Renderer
 			z.SetRasterizer(&vec.Rasterizer{Dst: got, DrawOp: draw.Src}, got.Bounds())
-			if err := decode.Decode(&z, ivgData, opts); err != nil {
+			if err := decode.Decode(&z, ivgData, opts...); err != nil {
 				t.Errorf("%s %q variant: Decode: %v", tc.filename, variant, err)
 				continue
 			}

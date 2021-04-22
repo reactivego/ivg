@@ -39,36 +39,41 @@ var midDescriptions = [...]string{
 
 type printer func(b []byte, format string, args ...interface{})
 
-// DecodeOptions are the optional parameters to the Decode function.
-type DecodeOptions struct {
-	// Palette is an optional 64 color palette. If one isn't provided, the
-	// IconVG graphic's suggested palette will be used.
-	Palette *[64]color.RGBA
+// DecodeOption is an optional parameter to the Decode function.
+type DecodeOption func(*ivg.Metadata)
+
+// WithPalette replaces the complete palette with the given one.
+func WithPalette(p [64]color.RGBA) DecodeOption {
+	return func(m *ivg.Metadata) {
+		m.Palette = p
+	}
+}
+
+// WithColorAt replaces the color at the given index in the palette
+// that was decoded.
+func WithColorAt(index int, c color.Color) DecodeOption {
+	return func(m *ivg.Metadata) {
+		m.Palette[index] = color.RGBAModel.Convert(c).(color.RGBA)
+	}
 }
 
 // DecodeMetadata decodes only the metadata in an IconVG graphic.
 func DecodeMetadata(src []byte) (m ivg.Metadata, err error) {
-	m.ViewBox = ivg.DefaultViewBox
-	m.Palette = ivg.DefaultPalette
-	if err = decode(nil, nil, &m, true, src, nil); err != nil {
+	m = ivg.DefaultMetadata
+	if err = decode(nil, nil, &m, true, src); err != nil {
 		return ivg.Metadata{}, err
 	}
 	return m, nil
 }
 
-// Decode decodes an IconVG graphic.
-func Decode(dst ivg.Destination, src []byte, opts *DecodeOptions) error {
-	m := ivg.Metadata{
-		ViewBox: ivg.DefaultViewBox,
-		Palette: ivg.DefaultPalette,
-	}
-	if opts != nil && opts.Palette != nil {
-		m.Palette = *opts.Palette
-	}
-	return decode(dst, nil, &m, false, src, opts)
+// Decode decodes an IconVG graphic. If no option to change the color palette is
+// provided, the palette suggested in the IconVG graphic's data will be used.
+func Decode(dst ivg.Destination, src []byte, opts ...DecodeOption) error {
+	m := ivg.DefaultMetadata
+	return decode(dst, nil, &m, false, src, opts...)
 }
 
-func decode(dst ivg.Destination, p printer, m *ivg.Metadata, metadataOnly bool, src buffer, opts *DecodeOptions) (err error) {
+func decode(dst ivg.Destination, p printer, m *ivg.Metadata, metadataOnly bool, src buffer, opts ...DecodeOption) (err error) {
 	if !bytes.HasPrefix(src, ivg.MagicBytes) {
 		return errInvalidMagicIdentifier
 	}
@@ -87,10 +92,13 @@ func decode(dst ivg.Destination, p printer, m *ivg.Metadata, metadataOnly bool, 
 	src = src[n:]
 
 	for ; nMetadataChunks > 0; nMetadataChunks-- {
-		src, err = decodeMetadataChunk(p, m, src, opts)
+		src, err = decodeMetadataChunk(p, m, src)
 		if err != nil {
 			return err
 		}
+	}
+	for _, opt := range opts {
+		opt(m)
 	}
 	if metadataOnly {
 		return nil
@@ -109,7 +117,7 @@ func decode(dst ivg.Destination, p printer, m *ivg.Metadata, metadataOnly bool, 
 	return nil
 }
 
-func decodeMetadataChunk(p printer, m *ivg.Metadata, src buffer, opts *DecodeOptions) (src1 buffer, err error) {
+func decodeMetadataChunk(p printer, m *ivg.Metadata, src buffer) (src1 buffer, err error) {
 	length, n := src.decodeNatural()
 	if n == 0 {
 		return nil, errInvalidMetadataChunkLength
@@ -181,9 +189,7 @@ func decodeMetadataChunk(p printer, m *ivg.Metadata, src buffer, opts *DecodeOpt
 				p(src[:n], "    RGBA %02x%02x%02x%02x\n", rgba.R, rgba.G, rgba.B, rgba.A)
 			}
 			src = src[n:]
-			if opts == nil || opts.Palette == nil {
-				m.Palette[i] = rgba
-			}
+			m.Palette[i] = rgba
 		}
 
 	default:

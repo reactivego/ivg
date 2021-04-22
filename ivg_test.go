@@ -46,7 +46,7 @@ func TestEncodeDecode(t *testing.T) {
 
 	e = &encode.Encoder{}
 	e.HighResolutionCoordinates = true
-	if err := decode.Decode(e, expect, nil); err != nil {
+	if err := decode.Decode(e, expect); err != nil {
 		t.Fatalf("decoding: %v", err)
 	}
 	actual, err := e.Bytes()

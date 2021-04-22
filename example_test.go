@@ -27,7 +27,7 @@ func Example() {
 	dst := image.NewAlpha(image.Rect(0, 0, width, width))
 	var z render.Renderer
 	z.SetRasterizer(&vec.Rasterizer{Dst: dst, DrawOp: draw.Src}, dst.Bounds())
-	if err := decode.Decode(&z, ivgData, nil); err != nil {
+	if err := decode.Decode(&z, ivgData); err != nil {
 		log.Fatal(err)
 	}
 

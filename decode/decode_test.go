@@ -38,7 +38,7 @@ func disassemble(src []byte) ([]byte, error) {
 		fmt.Fprintf(w, format, args...)
 	}
 	m := ivg.Metadata{}
-	if err := decode(nil, p, &m, false, buffer(src), nil); err != nil {
+	if err := decode(nil, p, &m, false, buffer(src)); err != nil {
 		return nil, err
 	}
 	return w.Bytes(), nil

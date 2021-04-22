@@ -56,7 +56,7 @@ func (i *IconVG) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
 	for idx, c := range col {
 		i.Palette[idx] = c
 	}
-	return decode.Decode(dst, i.data, &decode.DecodeOptions{Palette: i.Palette})
+	return decode.Decode(dst, i.data, decode.WithPalette(*i.Palette))
 }
 
 func (i *IconVG) Name() string {
