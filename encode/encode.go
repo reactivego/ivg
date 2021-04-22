@@ -37,6 +37,9 @@ const (
 // The zero value is usable. Calling Reset, which is optional, sets the
 // Metadata for the subsequent encoded form. If Reset is not called before
 // other Encoder methods, the default metadata is implied.
+//
+// It aims to emit byte-identical Bytes output for the same input, independent
+// of the platform (and specifically its floating-point hardware).
 type Encoder struct {
 	// HighResolutionCoordinates is whether the encoder should encode
 	// coordinate numbers for subsequent paths at the best possible resolution
