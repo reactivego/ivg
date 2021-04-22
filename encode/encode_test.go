@@ -56,7 +56,7 @@ func TestEncodeActionInfo(t *testing.T) {
 				MinX: -24, MinY: -24,
 				MaxX: +24, MaxY: +24,
 			},
-			&ivg.DefaultPalette,
+			ivg.DefaultPalette,
 		)
 		e.HighResolutionCoordinates = res == "hires"
 
@@ -217,7 +217,7 @@ func TestEncodeVideo005Primitive(t *testing.T) {
 		ivg.ViewBox{
 			MinX: -32, MinY: -24,
 			MaxX: +32, MaxY: +24},
-		&ivg.DefaultPalette,
+		ivg.DefaultPalette,
 	)
 
 	e.SetCReg(0, false, ivg.RGBAColor(color.RGBA{0x7c, 0x7e, 0x7c, 0xff}))

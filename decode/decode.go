@@ -102,7 +102,7 @@ func decode(dst ivg.Destination, p printer, m *ivg.Metadata, metadataOnly bool, 
 		return nil
 	}
 	if dst != nil {
-		dst.Reset(m.ViewBox, &m.Palette)
+		dst.Reset(m.ViewBox, m.Palette)
 	}
 
 	mf := modeFunc(decodeStyling)

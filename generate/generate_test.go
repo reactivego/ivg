@@ -144,7 +144,7 @@ func TestEncodeCowbell(t *testing.T) {
 			MinX: 0, MinY: 0,
 			MaxX: +48, MaxY: +48,
 		},
-		&ivg.DefaultPalette,
+		ivg.DefaultPalette,
 	)
 
 	for _, data := range cowbellSVGData {
@@ -263,7 +263,6 @@ func TestEncodeGradient(t *testing.T) {
 	testEncode(t, &e, "../testdata/gradient.ivg")
 }
 
-
 var faviconColors = []color.RGBA{
 	{0x76, 0xe1, 0xfe, 0xff},
 	{0x38, 0x4e, 0x54, 0xff},
@@ -328,7 +327,7 @@ func TestEncodeFavicon(t *testing.T) {
 	pal := ivg.DefaultPalette
 	pal[0] = faviconColors[0] // color.RGBA{0x76, 0xe1, 0xfe, 0xff}
 
-	gen.Reset(ivg.DefaultViewBox, &pal)
+	gen.Reset(ivg.DefaultViewBox, pal)
 
 	// The favicon graphic also uses a dark version of that base color. blend
 	// is 75% dark (CReg[63]) and 25% the base color (pal[0]).

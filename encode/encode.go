@@ -90,8 +90,8 @@ func (e *Encoder) Bytes() ([]byte, error) {
 // Reset resets the Encoder for the given Metadata.
 //
 // This includes setting e.HighResolutionCoordinates to false.
-func (e *Encoder) Reset(viewbox ivg.ViewBox, palette *[64]color.RGBA) {
-	m := ivg.Metadata{viewbox, *palette}
+func (e *Encoder) Reset(viewbox ivg.ViewBox, palette [64]color.RGBA) {
+	m := ivg.Metadata{ViewBox: viewbox, Palette: palette}
 	*e = Encoder{
 		buf:      append(e.buf[:0], ivg.Magic...),
 		metadata: m,

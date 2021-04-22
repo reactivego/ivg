@@ -10,11 +10,11 @@ type DestinationLogger struct {
 	Alt bool
 }
 
-func (d *DestinationLogger) Reset(viewbox ViewBox, palette *[64]color.RGBA) {
+func (d *DestinationLogger) Reset(viewbox ViewBox, palette [64]color.RGBA) {
 	if !d.Alt {
-		fmt.Printf("Reset(viewbox:%#v, colors:%#v)\n", viewbox, *palette)
+		fmt.Printf("Reset(viewbox:%#v, colors:%#v)\n", viewbox, palette)
 	} else {
-		fmt.Printf("dst.Reset(%#v, %#v)\n", viewbox, *palette)
+		fmt.Printf("dst.Reset(%#v, %#v)\n", viewbox, palette)
 	}
 	if d.Destination != nil {
 		d.Destination.Reset(viewbox, palette)

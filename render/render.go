@@ -82,9 +82,9 @@ func (z *Renderer) SetRasterizer(dst raster.Rasterizer, r image.Rectangle) {
 }
 
 // Reset resets the Destination for the given Metadata.
-func (z *Renderer) Reset(viewbox ivg.ViewBox, palette *[64]color.RGBA) {
+func (z *Renderer) Reset(viewbox ivg.ViewBox, palette [64]color.RGBA) {
 	z.viewBox = viewbox
-	z.palette = *palette
+	z.palette = palette
 	z.lod0 = 0
 	z.lod1 = positiveInfinity
 	z.cSel = 0
@@ -92,7 +92,7 @@ func (z *Renderer) Reset(viewbox ivg.ViewBox, palette *[64]color.RGBA) {
 	z.prevSmoothType = smoothTypeNone
 	z.prevSmoothPointX = 0
 	z.prevSmoothPointY = 0
-	z.cReg = *palette
+	z.cReg = palette
 	z.nReg = [64]float32{}
 	z.recalcTransform()
 }

@@ -8,7 +8,7 @@ import "image/color"
 // methods will be called at all if an error is encountered in the encoded form
 // before the metadata is fully decoded.
 type Destination interface {
-	Reset(viewbox ViewBox, palette *[64]color.RGBA)
+	Reset(viewbox ViewBox, palette [64]color.RGBA)
 	CSel() uint8
 	SetCSel(cSel uint8)
 	NSel() uint8

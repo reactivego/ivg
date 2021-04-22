@@ -129,7 +129,7 @@ func (f FaviconImage) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
 	// logger := &ivg.DestinationLogger{Destination: renderer}
 	// gen.SetDestination(logger)
 
-	gen.Reset(FaviconViewBox, &ivg.DefaultPalette)
+	gen.Reset(FaviconViewBox, ivg.DefaultPalette)
 
 	colors := []color.RGBA{
 		{0x76, 0xe1, 0xfe, 0xff}, // 0
@@ -192,7 +192,7 @@ func (f FaviconImage) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
 	pal := ivg.DefaultPalette
 	pal[0] = colors[0] // color.RGBA{0x76, 0xe1, 0xfe, 0xff}
 
-	gen.Reset(ivg.DefaultViewBox, &pal)
+	gen.Reset(ivg.DefaultViewBox, pal)
 
 	// The favicon graphic also uses a dark version of that base color. blend
 	// is 75% dark (CReg[63]) and 25% the base color (pal[0]).

@@ -128,7 +128,7 @@ func (g GradientsImage) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
 	// logger := &ivg.DestinationLogger{Destination: renderer}
 	// gen.SetDestination(logger)
 
-	gen.Reset(GradientsViewBox, &ivg.DefaultPalette)
+	gen.Reset(GradientsViewBox, ivg.DefaultPalette)
 
 	rgb := []generate.GradientStop{
 		{Offset: 0.00, Color: color.RGBA{0xff, 0x00, 0x00, 0xff}},

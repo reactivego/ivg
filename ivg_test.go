@@ -19,7 +19,7 @@ func TestEncodeDecode(t *testing.T) {
 			MinX: -24, MinY: -24,
 			MaxX: +24, MaxY: +24,
 		},
-		&ivg.DefaultPalette,
+		ivg.DefaultPalette,
 	)
 
 	e.StartPath(0, 0, -20)

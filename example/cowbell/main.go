@@ -131,7 +131,7 @@ func (c CowbellImage) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
 	// logger := &ivg.DestinationLogger{Destination: dst}
 	// gen.SetDestination(logger)
 
-	gen.Reset(CowbellViewBox, &ivg.DefaultPalette)
+	gen.Reset(CowbellViewBox, ivg.DefaultPalette)
 
 	type Gradient struct {
 		radial bool
