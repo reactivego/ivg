@@ -57,13 +57,11 @@ func WithColorAt(index int, c color.Color) DecodeOption {
 	}
 }
 
-// DecodeMetadata decodes only the metadata in an IconVG graphic.
-func DecodeMetadata(src []byte) (m ivg.Metadata, err error) {
-	m = ivg.DefaultMetadata
-	if err = decode(nil, nil, &m, true, src); err != nil {
-		return ivg.Metadata{}, err
-	}
-	return m, nil
+// DecodeViewbox decodes only the metadata in an IconVG graphic.
+func DecodeViewBox(src []byte) (vb ivg.ViewBox, err error) {
+	m := ivg.DefaultMetadata
+	err = decode(nil, nil, &m, true, src)
+	return m.ViewBox, err
 }
 
 // Decode decodes an IconVG graphic. If no option to change the color palette is

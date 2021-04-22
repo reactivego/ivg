@@ -24,9 +24,8 @@ type Icon interface {
 
 // IconVG is an icon that implements the gioui.org/widget.IconVG interface.
 type IconVG struct {
-	ViewBox *ivg.ViewBox
-	Palette *[64]color.RGBA
-	data    []byte
+	Data    []byte
+	ViewBox ivg.ViewBox
 
 	rasterizer Rasterizer
 	imgSize    int
@@ -39,12 +38,9 @@ type IconVG struct {
 // no rasterizer is passed the GioRasterizer is used to directly render the
 // icon using gio clip operations.
 func New(data []byte, rasterizers ...Rasterizer) (icon *IconVG, err error) {
-	i := &IconVG{data: data}
-	if metadata, err := decode.DecodeMetadata(data); err != nil {
+	i := &IconVG{Data: data}
+	if i.ViewBox, err = decode.DecodeViewBox(data); err != nil {
 		return nil, err
-	} else {
-		i.ViewBox = &metadata.ViewBox
-		i.Palette = &metadata.Palette
 	}
 	if len(rasterizers) > 0 {
 		i.rasterizer = rasterizers[0]
@@ -53,17 +49,18 @@ func New(data []byte, rasterizers ...Rasterizer) (icon *IconVG, err error) {
 }
 
 func (i *IconVG) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
+	opts := []decode.DecodeOption{}
 	for idx, c := range col {
-		i.Palette[idx] = c
+		opts = append(opts, decode.WithColorAt(idx, c))
 	}
-	return decode.Decode(dst, i.data, decode.WithPalette(*i.Palette))
+	return decode.Decode(dst, i.Data, opts...)
 }
 
 func (i *IconVG) Name() string {
 	if i.rasterizer != nil {
-		return string(i.data) + i.rasterizer.Name()
+		return string(i.Data) + i.rasterizer.Name()
 	} else {
-		return string(i.data) + GioRasterizer.Name()
+		return string(i.Data) + GioRasterizer.Name()
 	}
 }
 

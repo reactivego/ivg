@@ -104,9 +104,9 @@ func TestRenderer(t *testing.T) {
 			t.Errorf("%s: ReadFile: %v", tc.filename, err)
 			continue
 		}
-		md, err := decode.DecodeMetadata(ivgData)
+		vb, err := decode.DecodeViewBox(ivgData)
 		if err != nil {
-			t.Errorf("%s: DecodeMetadata: %v", tc.filename, err)
+			t.Errorf("%s: DecodeViewBox: %v", tc.filename, err)
 			continue
 		}
 
@@ -116,7 +116,7 @@ func TestRenderer(t *testing.T) {
 				length = 64
 			}
 			width, height := length, length
-			if dx, dy := md.ViewBox.Size(); dx < dy {
+			if dx, dy := vb.Size(); dx < dy {
 				width = int(float32(length) * dx / dy)
 			} else {
 				height = int(float32(length) * dy / dx)
