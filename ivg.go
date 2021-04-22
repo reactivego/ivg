@@ -163,3 +163,9 @@ var DefaultPalette = [64]color.RGBA{
 	{0x00, 0x00, 0x00, 0xff},
 	{0x00, 0x00, 0x00, 0xff},
 }
+
+// DefaultMetadata combines the default ViewBox and the default Palette.
+var DefaultMetadata = Metadata{
+	ViewBox: DefaultViewBox,
+	Palette: DefaultPalette,
+}
