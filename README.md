@@ -4,36 +4,12 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/reactivego/ivg.svg)](https://pkg.go.dev/github.com/reactivego/ivg#section-documentation)
 
-[Gio](https://gioui.org) (immediate mode GUI in Go) uses [IconVG](https://golang.org/x/exp/shiny/iconvg) (binary format for simple vector graphic icons).
-This code is a refactoring of the IconVG code. It removes the need for rendering to an intermediate RGBA image. Instead it uses Gio `clip.Path` functionality.
+Package `ivg` provides rendering of [IconVG](https://github.com/google/iconvg) icons in [Gio](https://gioui.org). IconVG is a binary format for simple vector graphic icons and Gio is an immediate mode GUI for Go. 
 
-The name of the *IconVG* package has been changed to *ivg* so we don't confuse people about what's what.
+This package changes the original [IconVG](https://golang.org/x/exp/shiny/iconvg) code. It replaces the approach of rendering to an intermediate image. Instead it directly renders using Gio's (much faster) vector graphics API.
 
-The most important changes w.r.t. the original IconVG code are:
+The name of the `iconvg` package has been changed to `ivg` so we don't confuse people about what's what.
 
-1. Separate code into packages with a clear purpose and responsibility for better cohesion and less coupling.
-2. Split icon encoding into `encode` and `generate` package.
-3. SVG gradient and path support is now part of `generate` package.
-4. Rename `Rasterizer` to `Renderer` and place it in the `render` package.
-5. Move `Destination` interface into root `ivg` package.
-6. Make both `Encoder` and `Renderer` implement `Destination`.
-7. Make both `Decoder` and `Generator` use only `Destination` interface.
-8. `Generator` can now directly render by plugging in a `Renderer` (very useful).
-9. `Encoder` can be plugged directly into a `Decoder` (useful for testing).
-10. Abstract away rasterizing into a seperate package `raster`
-    - Declare interface `Rasterizer`.
-    - Declare interface `GradientConfig` implemented by `Renderer`.
-11. Create a rasterizer using "golang.org/x/image/vector" in directory `raster/vec`
-12. Create a rasterizer using "gioui.org/op/clip" in directory `raster/gio`
-    - Special case for `GradientConfig`, selectively sample gradient only inside path bounds.
-14. Create examples in the `example` folder.
-    - `playarrow` simplest example of rendering an icon, [see below](#example-playarrow).
-    - `actioninfo` generate an icon on the fly, render it and cache the result, [see below](#example-actioninfo).
-    - The following examples allow you to see rendering and speed differences between rasterizers by clicking on the image to switch rasterizer. 
-        - `icons` renders golang.org/x/exp/shiny/materialdesign/icons. [see below](#example-icons).
-        - `favicon` vector image with several blended layers. [see below](#example-favicon).
-        - `cowbell` vector image with several blended layers including gradients. [see below](#example-cowbell).
-        - `gradients` vector image with lots of gradients. [see below](#example-gradients).
 
 ## Example PlayArrow
 
@@ -333,9 +309,40 @@ Generator -> Renderer -> Rasterizer
 ```
 The rendering takes relatively long because the gradients need to be pre-generated even for the Gio renderer. But even considering that, Gio is approximately 8 times faster than Vec.
 
+## Changes
+
+The most important changes w.r.t. the original IconVG code are:
+
+1. Separate code into packages with a clear purpose and responsibility for better cohesion and less coupling.
+2. Split icon encoding into `encode` and `generate` package.
+3. SVG gradient and path support is now part of `generate` package.
+4. Rename `Rasterizer` to `Renderer` and place it in the `render` package.
+5. Move `Destination` interface into root `ivg` package.
+6. Make both `Encoder` and `Renderer` implement `Destination`.
+7. Make both `Decoder` and `Generator` use only `Destination` interface.
+8. `Generator` can now directly render by plugging in a `Renderer` (very useful).
+9. `Encoder` can be plugged directly into a `Decoder` (useful for testing).
+10. Abstract away rasterizing into a seperate package `raster`
+    - Declare interface `Rasterizer`.
+    - Declare interface `GradientConfig` implemented by `Renderer`.
+11. Create a rasterizer using "golang.org/x/image/vector" in directory `raster/vec`
+12. Create a rasterizer using "gioui.org/op/clip" in directory `raster/gio`
+    - Special case for `GradientConfig`, selectively sample gradient only inside path bounds.
+14. Create examples in the `example` folder.
+    - `playarrow` simplest example of rendering an icon, [see below](#example-playarrow).
+    - `actioninfo` generate an icon on the fly, render it and cache the result, [see below](#example-actioninfo).
+    - The following examples allow you to see rendering and speed differences between rasterizers by clicking on the image to switch rasterizer. 
+        - `icons` renders golang.org/x/exp/shiny/materialdesign/icons. [see below](#example-icons).
+        - `favicon` vector image with several blended layers. [see below](#example-favicon).
+        - `cowbell` vector image with several blended layers including gradients. [see below](#example-cowbell).
+        - `gradients` vector image with lots of gradients. [see below](#example-gradients).
+
 ## Acknowledgement
 
-This code is base on [golang.org/x/exp/shiny/iconvg](https://github.com/golang/exp/tree/master/shiny/iconvg).
+The code in this package is based on [golang.org/x/exp/shiny/iconvg](https://github.com/golang/exp/tree/master/shiny/iconvg).
+
+The specification of the IconVG format has recently been moved to a separate repository [github.com/google/iconvg](https://github.com/google/iconvg).
+
 
 ## License
 
