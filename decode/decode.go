@@ -292,9 +292,6 @@ func decodeSetCReg(dst ivg.Destination, p printer, src buffer, opcode byte) (mod
 	return decodeStyling, src, nil
 }
 
-func printColor(src []byte, p printer, c ivg.Color, prefix string) {
-}
-
 func decodeSetNReg(dst ivg.Destination, p printer, src buffer, opcode byte) (modeFunc, buffer, error) {
 	decode, typ, adj := buffer.decodeZeroToOne, "zero-to-one", opcode&0x07
 	incr := adj == 7
