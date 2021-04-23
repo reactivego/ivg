@@ -5,7 +5,6 @@
 package encode
 
 import (
-	"errors"
 	"image/color"
 	"math"
 
@@ -17,11 +16,15 @@ var (
 	positiveInfinity = math.Float32frombits(0x7f800000)
 )
 
+type EncodeError string
+
+func (e EncodeError) Error() string { return "iconvg: " + string(e) }
+
 var (
-	errDrawingOpsUsedInStylingMode   = errors.New("iconvg: drawing ops used in styling mode")
-	errInvalidSelectorAdjustment     = errors.New("iconvg: invalid selector adjustment")
-	errInvalidIncrementingAdjustment = errors.New("iconvg: invalid incrementing adjustment")
-	errStylingOpsUsedInDrawingMode   = errors.New("iconvg: styling ops used in drawing mode")
+	errDrawingOpsUsedInStylingMode   = EncodeError("drawing ops used in styling mode")
+	errInvalidSelectorAdjustment     = EncodeError("invalid selector adjustment")
+	errInvalidIncrementingAdjustment = EncodeError("invalid incrementing adjustment")
+	errStylingOpsUsedInDrawingMode   = EncodeError("styling ops used in drawing mode")
 )
 
 type mode uint8

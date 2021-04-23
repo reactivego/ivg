@@ -6,7 +6,6 @@ package decode
 
 import (
 	"bytes"
-	"errors"
 	"image/color"
 	"math"
 
@@ -17,19 +16,23 @@ func isNaNOrInfinity(f float32) bool {
 	return math.Float32bits(f)&0x7f800000 == 0x7f800000
 }
 
+type DecodeError string
+
+func (e DecodeError) Error() string { return "iconvg: " + string(e) }
+
 var (
-	errInconsistentMetadataChunkLength = errors.New("iconvg: inconsistent metadata chunk length")
-	errInvalidColor                    = errors.New("iconvg: invalid color")
-	errInvalidMagicIdentifier          = errors.New("iconvg: invalid magic identifier")
-	errInvalidMetadataChunkLength      = errors.New("iconvg: invalid metadata chunk length")
-	errInvalidMetadataIdentifier       = errors.New("iconvg: invalid metadata identifier")
-	errInvalidNumber                   = errors.New("iconvg: invalid number")
-	errInvalidNumberOfMetadataChunks   = errors.New("iconvg: invalid number of metadata chunks")
-	errInvalidSuggestedPalette         = errors.New("iconvg: invalid suggested palette")
-	errInvalidViewBox                  = errors.New("iconvg: invalid view box")
-	errUnsupportedDrawingOpcode        = errors.New("iconvg: unsupported drawing opcode")
-	errUnsupportedMetadataIdentifier   = errors.New("iconvg: unsupported metadata identifier")
-	errUnsupportedStylingOpcode        = errors.New("iconvg: unsupported styling opcode")
+	errInconsistentMetadataChunkLength = DecodeError("inconsistent metadata chunk length")
+	errInvalidColor                    = DecodeError("invalid color")
+	errInvalidMagicIdentifier          = DecodeError("invalid magic identifier")
+	errInvalidMetadataChunkLength      = DecodeError("invalid metadata chunk length")
+	errInvalidMetadataIdentifier       = DecodeError("invalid metadata identifier")
+	errInvalidNumber                   = DecodeError("invalid number")
+	errInvalidNumberOfMetadataChunks   = DecodeError("invalid number of metadata chunks")
+	errInvalidSuggestedPalette         = DecodeError("invalid suggested palette")
+	errInvalidViewBox                  = DecodeError("invalid view box")
+	errUnsupportedDrawingOpcode        = DecodeError("unsupported drawing opcode")
+	errUnsupportedMetadataIdentifier   = DecodeError("unsupported metadata identifier")
+	errUnsupportedStylingOpcode        = DecodeError("unsupported styling opcode")
 )
 
 var midDescriptions = [...]string{
