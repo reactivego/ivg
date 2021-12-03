@@ -81,11 +81,11 @@ func Icons() {
 
 			// fill content rect
 			paint.ColorOp{Color: Grey300}.Add(ops)
-			state := op.Save(ops)
-			op.Offset(contentRect.Min).Add(ops)
-			clip.Rect(image.Rect(0, 0, int(contentRect.Dx()), int(contentRect.Dy()))).Add(ops)
+			tstack := op.Offset(contentRect.Min).Push(ops)
+			cstack := clip.Rect(image.Rect(0, 0, int(contentRect.Dx()), int(contentRect.Dy()))).Push(ops)
 			paint.PaintOp{}.Add(ops)
-			state.Load()
+			cstack.Pop()
+			tstack.Pop()
 
 			// select next icon and paint
 			n := uint(len(IconCollection))
@@ -126,14 +126,14 @@ func PrintText(txt string, pt f32.Point, ax, ay, width float32, style TextStyle,
 	}
 	offset := f32.Pt(pt.X-ax*dx, pt.Y-ay*dy)
 	for _, line := range lines {
-		state := op.Save(ops)
 		offset.Y += float32(line.Ascent.Ceil())
-		op.Offset(offset).Add(ops)
+		tstack := op.Offset(offset).Push(ops)
 		offset.Y += float32(line.Descent.Ceil())
-		style.Cache.Shape(style.Font, size, line.Layout).Add(ops)
+		cstack := style.Cache.Shape(style.Font, size, line.Layout).Push(ops)
 		paint.ColorOp{Color: style.Color}.Add(ops)
 		paint.PaintOp{}.Add(ops)
-		state.Load()
+		cstack.Pop()
+		tstack.Pop()
 	}
 	return
 }

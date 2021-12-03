@@ -79,9 +79,8 @@ func (v vecRasterizer) Rasterize(icon Icon, rect f32.Rectangle, col ...color.RGB
 		return op.CallOp{}, err
 	}
 	paint.NewImageOp(z.Dst).Add(ops)
-	state := op.Save(ops)
-	op.Offset(offset).Add(ops)
+	tstack := op.Offset(offset).Push(ops)
 	paint.PaintOp{}.Add(ops)
-	state.Load()
+	tstack.Pop()
 	return macro.Stop(), nil
 }

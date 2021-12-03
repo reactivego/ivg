@@ -120,9 +120,8 @@ func (v *Rasterizer) ClosePath() {
 
 func (v *Rasterizer) Draw(r image.Rectangle, src image.Image, sp image.Point) {
 	clip := v.Op()
-	state := op.Save(v.Ops)
-	op.Offset(f32.Pt(float32(r.Min.X), float32(r.Min.Y))).Add(v.Ops)
-	clip.Add(v.Ops)
+	tstack := op.Offset(f32.Pt(float32(r.Min.X), float32(r.Min.Y))).Push(v.Ops)
+	cstack := clip.Push(v.Ops)
 	switch source := src.(type) {
 	case raster.GradientConfig:
 		// TODO: If the gradient contains translucent colors we probably still must
@@ -138,5 +137,6 @@ func (v *Rasterizer) Draw(r image.Rectangle, src image.Image, sp image.Point) {
 		paint.NewImageOp(src).Add(v.Ops)
 	}
 	paint.PaintOp{}.Add(v.Ops)
-	state.Load()
+	cstack.Pop()
+	tstack.Pop()
 }
