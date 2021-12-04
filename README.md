@@ -13,7 +13,7 @@ The name of the `iconvg` package has been changed to `ivg` so we don't confuse p
 
 ## Example PlayArrow
 
-![PlayButton Gio](../assets/playbutton-gio.png?raw=true)
+![PlayArrow Gio](../assets/playbutton-gio.png?raw=true)
 
 Simplest example of rendering an icon from an .ivg file stored in a slice of bytes.
 
@@ -31,7 +31,7 @@ import (
     "gioui.org/op"
     "gioui.org/unit"
 
-    "github.com/reactivego/ivg/icon"
+    "github.com/reactivego/ivg/raster/gio"
 )
 
 func main() {
@@ -44,7 +44,7 @@ func PlayArrow() {
         app.Title("IVG - PlayArrow"),
         app.Size(unit.Dp(768), unit.Dp(768)),
     )
-    playArrow, err := icon.New([]byte{
+    playArrow, err := gio.NewIcon([]byte{
         // AVPlayArrow data taken from "golang.org/x/exp/shiny/materialdesign/icons"
         0x89, 0x49, 0x56, 0x47, 0x02, 0x0a, 0x00, 0x50, 0x50, 0xb0,
         0xb0, 0xc0, 0x70, 0x64, 0xe9, 0xb8, 0x20, 0xac, 0x64, 0xe1,
@@ -56,16 +56,16 @@ func PlayArrow() {
     for event := range window.Events() {
         if frame, ok := event.(system.FrameEvent); ok {
             ops.Reset()
-
             contentRect := f32.Rect(0, 0, float32(frame.Size.X), float32(frame.Size.Y))
+
             viewRect := playArrow.AspectMeet(contentRect, 0.5, 0.5)
             blue := color.RGBA{0x21, 0x96, 0xf3, 0xff}
-            callOp, err := playArrow.Rasterize(viewRect, blue)
+            callOp, err := gio.Rasterize(playArrow, viewRect, gio.WithColors(blue))
+
             if err != nil {
                 log.Fatal(err)
             }
             callOp.Add(ops)
-
             frame.Frame(ops)
         }
     }
@@ -105,7 +105,7 @@ import (
     "github.com/reactivego/ivg"
     "github.com/reactivego/ivg/encode"
     "github.com/reactivego/ivg/generate"
-    "github.com/reactivego/ivg/icon"
+    "github.com/reactivego/ivg/raster/gio"
 )
 
 func main() {
@@ -121,18 +121,18 @@ func ActionInfo() {
     // generate ivg data bytes on the fly for the ActionInfo icon.
     enc := &encode.Encoder{}
     gen := &generate.Generator{Destination: enc}
-    gen.Reset(ivg.ViewBox{0, 0, 48, 48}, ivg.DefaultPalette)
+    gen.Reset(ivg.ViewBox{MinX: 0, MinY: 0, MaxX: 48, MaxY: 48}, ivg.DefaultPalette)
     gen.SetPathData("M24 4C12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 "+
         "20-20S35.05 4 24 4zm2 30h-4V22h4v12zm0-16h-4v-4h4v4z", 0, false)
     actionInfoData, err := enc.Bytes()
     if err != nil {
         log.Fatal(err)
     }
-    actionInfo, err := icon.New(actionInfoData)
+    actionInfo, err := gio.NewIcon(actionInfoData)
     if err != nil {
         log.Fatal(err)
     }
-    cache := icon.NewCache()
+    cache := gio.NewIconCache()
     ops := new(op.Ops)
     for next := range window.Events() {
         if frame, ok := next.(system.FrameEvent); ok {
@@ -140,7 +140,7 @@ func ActionInfo() {
             contentRect := f32.Rect(0, 0, float32(frame.Size.X), float32(frame.Size.Y))
             viewRect := actionInfo.AspectMeet(contentRect, ivg.Mid, ivg.Mid)
             blue := color.RGBA{0x21, 0x96, 0xf3, 0xff}
-            if callOp, err := cache.Rasterize(actionInfo, viewRect, blue); err == nil {
+            if callOp, err := cache.Rasterize(actionInfo, viewRect, gio.WithColors(blue)); err == nil {
                 callOp.Add(ops)
             } else {
                 log.Fatal(err)
@@ -186,7 +186,7 @@ import (
     "gioui.org/op/paint"
     "gioui.org/unit"
 
-    "github.com/reactivego/ivg/icon"
+    "github.com/reactivego/ivg/raster/gio"
 )
 
 func main() {
@@ -199,7 +199,13 @@ func Icons() {
         app.Title("IVG - Icons"),
         app.Size(unit.Dp(768), unit.Dp(768)),
     )
-    var rasterizer icon.Rasterizer = icon.GioRasterizer
+    type Backend struct {
+        Name   string
+        Driver gio.Driver
+    }
+    backend := Backend{"Gio", gio.Gio}
+    Grey300 := color.NRGBAModel.Convert(colornames.Grey300).(color.NRGBA)
+    Grey800 := color.NRGBAModel.Convert(colornames.Grey800).(color.NRGBA)
     ops := new(op.Ops)
     backdrop := new(int)
     index := 0
@@ -212,18 +218,18 @@ func Icons() {
             for _, next := range frame.Queue.Events(backdrop) {
                 if event, ok := next.(pointer.Event); ok {
                     if event.Type == pointer.Release {
-                        switch rasterizer {
-                        case icon.GioRasterizer:
-                            rasterizer = icon.VecRasterizer
-                        case icon.VecRasterizer:
-                            rasterizer = icon.GioRasterizer
+                        switch backend.Name {
+                        case "Gio":
+                            backend = Backend{"Vec", gio.Vec}
+                        case "Vec":
+                            backend = Backend{"Gio", gio.Gio}
                         }
                     }
                 }
             }
 
             // fill the whole backdrop rectangle
-            paint.ColorOp{Color: colornames.Grey800}.Add(ops)
+            paint.ColorOp{Color: Grey800}.Add(ops)
             paint.PaintOp{}.Add(ops)
 
             // device independent content rect calculation
@@ -237,29 +243,30 @@ func Icons() {
                 float32(frame.Metric.Px(maxX)), float32(frame.Metric.Px(maxY)))
 
             // fill content rect
-            paint.ColorOp{Color: colornames.Grey300}.Add(ops)
-            state := op.Save(ops)
-            op.Offset(contentRect.Min).Add(ops)
-            clip.Rect(image.Rect(0, 0, int(contentRect.Dx()), int(contentRect.Dy()))).Add(ops)
+            paint.ColorOp{Color: Grey300}.Add(ops)
+            tstack := op.Offset(contentRect.Min).Push(ops)
+            cstack := clip.Rect(image.Rect(0, 0, int(contentRect.Dx()), int(contentRect.Dy()))).Push(ops)
             paint.PaintOp{}.Add(ops)
-            state.Load()
+            cstack.Pop()
+            tstack.Pop()
 
             // select next icon and paint
             n := uint(len(IconCollection))
             ico := IconCollection[(uint(index)+n)%n]
             index++
             start := time.Now()
-            icon, err := icon.New(ico.data)
+            icon, err := gio.NewIcon(ico.data)
             if err != nil {
                 log.Fatal(err)
             }
             viewRect := icon.AspectMeet(contentRect, 0.5, 0.5)
-            if callOp, err := rasterizer.Rasterize(icon, viewRect, colornames.LightBlue600); err == nil {
+            if callOp, err := gio.Rasterize(icon, viewRect, gio.WithColors(colornames.LightBlue600), gio.WithDriver(backend.Driver)); err == nil {
                 callOp.Add(ops)
             } else {
                 log.Fatal(err)
             }
-            msg := fmt.Sprintf("%s (%v)", rasterizer.Name(), time.Since(start).Round(time.Microsecond))
+            msg := fmt.Sprintf("%s (%v)", backend.Name, time.Since(start).Round(time.Microsecond))
+            H5 := Style(H5, WithMetric(frame.Metric))
             PrintText(msg, contentRect.Min, 0.0, 0.0, contentRect.Dx(), H5, ops)
 
             at := time.Now().Add(500 * time.Millisecond)

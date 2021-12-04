@@ -28,7 +28,7 @@ import (
 
 	"github.com/reactivego/ivg"
 	"github.com/reactivego/ivg/generate"
-	"github.com/reactivego/ivg/icon"
+	"github.com/reactivego/ivg/raster/gio"
 )
 
 func main() {
@@ -41,7 +41,11 @@ func Favicon() {
 		app.Title("IVG - Favicon"),
 		app.Size(unit.Dp(768), unit.Dp(768)),
 	)
-	rasterizer := icon.Rasterizer(icon.GioRasterizer)
+	type Backend struct {
+		Name   string
+		Driver gio.Driver
+	}
+	backend := Backend{"Gio", gio.Gio}
 	favicon := FaviconImage{}
 
 	Grey300 := color.NRGBAModel.Convert(colornames.Grey300).(color.NRGBA)
@@ -58,11 +62,11 @@ func Favicon() {
 			for _, next := range frame.Queue.Events(backdrop) {
 				if event, ok := next.(pointer.Event); ok {
 					if event.Type == pointer.Release {
-						switch rasterizer {
-						case icon.GioRasterizer:
-							rasterizer = icon.VecRasterizer
-						case icon.VecRasterizer:
-							rasterizer = icon.GioRasterizer
+						switch backend.Name {
+						case "Gio":
+							backend = Backend{"Vec", gio.Vec}
+						case "Vec":
+							backend = Backend{"Gio", gio.Gio}
 						}
 					}
 				}
@@ -95,12 +99,12 @@ func Favicon() {
 
 			// render actual content
 			start := time.Now()
-			if callOp, err := rasterizer.Rasterize(favicon, viewRect); err == nil {
+			if callOp, err := gio.Rasterize(favicon, viewRect, gio.WithDriver(backend.Driver)); err == nil {
 				callOp.Add(ops)
 			} else {
 				log.Fatal(err)
 			}
-			msg := fmt.Sprintf("%s (%v)", rasterizer.Name(), time.Since(start).Round(time.Microsecond))
+			msg := fmt.Sprintf("%s (%v)", backend.Name, time.Since(start).Round(time.Microsecond))
 			H5 := Style(H5, WithMetric(frame.Metric))
 			PrintText(msg, contentRect.Min, 0.0, 0.0, contentRect.Dx(), H5, ops)
 
@@ -119,6 +123,10 @@ var FaviconViewBox = ivg.ViewBox{
 
 func (f FaviconImage) AspectMeet(rect f32.Rectangle, ax, ay float32) f32.Rectangle {
 	return f32.Rect(FaviconViewBox.AspectMeet(rect.Min.X, rect.Min.Y, rect.Max.X, rect.Max.Y, ax, ay))
+}
+
+func (FaviconImage) Name() string {
+	return "Favicon"
 }
 
 func (f FaviconImage) RenderOn(dst ivg.Destination, col ...color.RGBA) error {

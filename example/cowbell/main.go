@@ -28,7 +28,7 @@ import (
 
 	"github.com/reactivego/ivg"
 	"github.com/reactivego/ivg/generate"
-	"github.com/reactivego/ivg/icon"
+	"github.com/reactivego/ivg/raster/gio"
 )
 
 func main() {
@@ -44,23 +44,27 @@ func Cowbell() {
 	ops := new(op.Ops)
 	backdrop := new(int)
 
-	var rasterizer icon.Rasterizer = icon.GioRasterizer
+	type Backend struct {
+		Name   string
+		Driver gio.Driver
+	}
+	backend := Backend{"Gio", gio.Gio}
 	var cowbell CowbellImage
 
 	for next := range window.Events() {
 		if frame, ok := next.(system.FrameEvent); ok {
 			ops.Reset()
 
-			// clicking on backdrop will switch active renderer
+			// clicking on backdrop will switch active backend driver used for rasterizing
 			pointer.InputOp{Tag: backdrop, Types: pointer.Release}.Add(ops)
 			for _, next := range frame.Queue.Events(backdrop) {
 				if event, ok := next.(pointer.Event); ok {
 					if event.Type == pointer.Release {
-						switch rasterizer {
-						case icon.GioRasterizer:
-							rasterizer = icon.VecRasterizer
-						case icon.VecRasterizer:
-							rasterizer = icon.GioRasterizer
+						switch backend.Name {
+						case "Gio":
+							backend = Backend{"Vec", gio.Vec}
+						case "Vec":
+							backend = Backend{"Gio", gio.Gio}
 						}
 					}
 				}
@@ -96,12 +100,12 @@ func Cowbell() {
 
 			// render actual content
 			start := time.Now()
-			if callOp, err := rasterizer.Rasterize(cowbell, viewRect); err == nil {
+			if callOp, err := gio.Rasterize(cowbell, viewRect, gio.WithDriver(backend.Driver)); err == nil {
 				callOp.Add(ops)
 			} else {
 				log.Fatal(err)
 			}
-			msg := fmt.Sprintf("%s (%v)", rasterizer.Name(), time.Since(start).Round(time.Millisecond))
+			msg := fmt.Sprintf("%s (%v)", backend.Name, time.Since(start).Round(time.Millisecond))
 			H5 := Style(H5, WithMetric(frame.Metric))
 			PrintText(msg, contentRect.Min, 0.0, 0.0, contentRect.Dx(), H5, ops)
 
@@ -121,6 +125,10 @@ var CowbellViewBox = ivg.ViewBox{
 func (c CowbellImage) AspectMeet(rect f32.Rectangle, ax, ay float32) f32.Rectangle {
 	l, t, r, b := rect.Min.X, rect.Min.Y, rect.Max.X, rect.Max.Y
 	return f32.Rect(CowbellViewBox.AspectMeet(l, t, r, b, ax, ay))
+}
+
+func (CowbellImage) Name() string {
+	return "Cowbell"
 }
 
 func (c CowbellImage) RenderOn(dst ivg.Destination, col ...color.RGBA) error {

@@ -1,0 +1,173 @@
+package gio
+
+import (
+	"crypto/md5"
+	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
+
+	"gioui.org/f32"
+	"gioui.org/op"
+	"gioui.org/op/paint"
+
+	"github.com/reactivego/ivg"
+	"github.com/reactivego/ivg/decode"
+	"github.com/reactivego/ivg/raster/vec"
+	"github.com/reactivego/ivg/render"
+)
+
+type Options struct {
+	Colors []color.RGBA
+	Driver Driver
+}
+
+type Option func(*Options)
+
+func WithColors(colors ...color.RGBA) Option {
+	return func(options *Options) {
+		options.Colors = colors
+	}
+}
+
+type Driver func(icon ivg.Icon, rect f32.Rectangle, col ...color.RGBA) (op.CallOp, error)
+
+func WithDriver(driver Driver) Option {
+	return func(options *Options) {
+		options.Driver = driver
+	}
+}
+
+func Rasterize(i ivg.Icon, rect f32.Rectangle, options ...Option) (op.CallOp, error) {
+	opts := Options{Driver: Gio}
+	for _, option := range options {
+		option(&opts)
+	}
+	return opts.Driver(i, rect, opts.Colors...)
+}
+
+// Gio is a driver based on "gioui.org/op/clip".
+func Gio(icon ivg.Icon, rect f32.Rectangle, col ...color.RGBA) (op.CallOp, error) {
+	ops := new(op.Ops)
+	macro := op.Record(ops)
+	r := &render.Renderer{}
+	z := &Rasterizer{Ops: ops}
+	r.SetRasterizer(z, image.Rect(int(rect.Min.X), int(rect.Min.Y), int(rect.Max.X), int(rect.Max.Y)))
+	if err := icon.RenderOn(r, col...); err != nil {
+		return op.CallOp{}, err
+	}
+	return macro.Stop(), nil
+}
+
+// Vec is a driver based on "golang.org/x/image/vector".
+func Vec(icon ivg.Icon, rect f32.Rectangle, col ...color.RGBA) (op.CallOp, error) {
+	ops := new(op.Ops)
+	macro := op.Record(ops)
+	r := &render.Renderer{}
+	offset := rect.Min
+	bounds := image.Rect(0, 0, int(rect.Dx()), int(rect.Dy()))
+	z := &vec.Rasterizer{Dst: image.NewRGBA(bounds), DrawOp: draw.Src}
+	r.SetRasterizer(z, bounds)
+	if err := icon.RenderOn(r, col...); err != nil {
+		return op.CallOp{}, err
+	}
+	paint.NewImageOp(z.Dst).Add(ops)
+	tstack := op.Offset(offset).Push(ops)
+	paint.PaintOp{}.Add(ops)
+	tstack.Pop()
+	return macro.Stop(), nil
+}
+
+// IconCache is an icon cache that caches op.CallOp values returned by a call to
+// the Rasterize method.
+type IconCache struct {
+	item map[key]op.CallOp
+}
+
+type key struct {
+	checksum [md5.Size]byte
+	rect     f32.Rectangle
+}
+
+// NewIconCache returns a new icon cache.
+func NewIconCache() *IconCache {
+	return &IconCache{make(map[key]op.CallOp)}
+}
+
+// Rasterize returns a gio op.CallOp that paints the 'icon' inside the given
+// rectangle 'rect' overiding colors with the colors 'col'.
+func (c *IconCache) Rasterize(icon ivg.Icon, rect f32.Rectangle, options ...Option) (op.CallOp, error) {
+	data := []byte(icon.Name())
+	opts := Options{Driver: Gio}
+	for _, option := range options {
+		option(&opts)
+	}
+	for _, c := range opts.Colors {
+		data = append(data, c.R, c.G, c.B, c.A)
+	}
+	data = append(data, fmt.Sprintf("%v", opts.Driver)...)
+	key := key{md5.Sum(data), rect}
+	if callOp, present := c.item[key]; present {
+		return callOp, nil
+	}
+	if callOp, err := opts.Driver(icon, rect, opts.Colors...); err == nil {
+		c.item[key] = callOp
+		return callOp, nil
+	} else {
+		return op.CallOp{}, err
+	}
+}
+
+// Icon is an icon that implements the ivg.Icon interface.
+type Icon struct {
+	Data    []byte
+	ViewBox ivg.ViewBox
+
+	imgSize  int
+	imgColor color.RGBA
+	callOp   op.CallOp
+}
+
+// New creates a new IconVG (cachable) icon from the given data bytes.
+func NewIcon(data []byte) (icon *Icon, err error) {
+	i := &Icon{Data: data}
+	if i.ViewBox, err = decode.DecodeViewBox(data); err != nil {
+		return nil, err
+	}
+	return i, nil
+}
+
+func (i *Icon) Name() string {
+	return string(i.Data)
+}
+
+func (i *Icon) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
+	opts := []decode.DecodeOption{}
+	for idx, c := range col {
+		opts = append(opts, decode.WithColorAt(idx, c))
+	}
+	return decode.Decode(dst, i.Data, opts...)
+}
+
+func (i *Icon) AspectMeet(rect f32.Rectangle, ax, ay float32) f32.Rectangle {
+	return f32.Rect(i.ViewBox.AspectMeet(rect.Min.X, rect.Min.Y, rect.Max.X, rect.Max.Y, ax, ay))
+}
+
+func (i *Icon) AspectSlice(rect f32.Rectangle, ax, ay float32) f32.Rectangle {
+	return f32.Rect(i.ViewBox.AspectSlice(rect.Min.X, rect.Min.Y, rect.Max.X, rect.Max.Y, ax, ay))
+}
+
+func (i *Icon) Layout(ops *op.Ops, sz int, c color.RGBA) image.Point {
+	rect := i.AspectMeet(f32.Rect(0, 0, float32(sz), float32(sz)), ivg.Mid, ivg.Mid)
+	if sz != i.imgSize || c != i.imgColor {
+		if callOp, err := Rasterize(i, rect, WithColors(c)); err != nil {
+			return image.Pt(0, 0)
+		} else {
+			i.callOp = callOp
+			i.imgSize = sz
+			i.imgColor = c
+		}
+	}
+	i.callOp.Add(ops)
+	return image.Pt(sz, int(rect.Max.Y))
+}

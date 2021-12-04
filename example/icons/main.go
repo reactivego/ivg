@@ -27,7 +27,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 
-	"github.com/reactivego/ivg/icon"
+	"github.com/reactivego/ivg/raster/gio"
 )
 
 func main() {
@@ -40,7 +40,11 @@ func Icons() {
 		app.Title("IVG - Icons"),
 		app.Size(unit.Dp(768), unit.Dp(768)),
 	)
-	var rasterizer icon.Rasterizer = icon.GioRasterizer
+	type Backend struct {
+		Name   string
+		Driver gio.Driver
+	}
+	backend := Backend{"Gio", gio.Gio}
 	Grey300 := color.NRGBAModel.Convert(colornames.Grey300).(color.NRGBA)
 	Grey800 := color.NRGBAModel.Convert(colornames.Grey800).(color.NRGBA)
 	ops := new(op.Ops)
@@ -55,11 +59,11 @@ func Icons() {
 			for _, next := range frame.Queue.Events(backdrop) {
 				if event, ok := next.(pointer.Event); ok {
 					if event.Type == pointer.Release {
-						switch rasterizer {
-						case icon.GioRasterizer:
-							rasterizer = icon.VecRasterizer
-						case icon.VecRasterizer:
-							rasterizer = icon.GioRasterizer
+						switch backend.Name {
+						case "Gio":
+							backend = Backend{"Vec", gio.Vec}
+						case "Vec":
+							backend = Backend{"Gio", gio.Gio}
 						}
 					}
 				}
@@ -92,17 +96,17 @@ func Icons() {
 			ico := IconCollection[(uint(index)+n)%n]
 			index++
 			start := time.Now()
-			icon, err := icon.New(ico.data)
+			icon, err := gio.NewIcon(ico.data)
 			if err != nil {
 				log.Fatal(err)
 			}
 			viewRect := icon.AspectMeet(contentRect, 0.5, 0.5)
-			if callOp, err := rasterizer.Rasterize(icon, viewRect, colornames.LightBlue600); err == nil {
+			if callOp, err := gio.Rasterize(icon, viewRect, gio.WithColors(colornames.LightBlue600), gio.WithDriver(backend.Driver)); err == nil {
 				callOp.Add(ops)
 			} else {
 				log.Fatal(err)
 			}
-			msg := fmt.Sprintf("%s (%v)", rasterizer.Name(), time.Since(start).Round(time.Microsecond))
+			msg := fmt.Sprintf("%s (%v)", backend.Name, time.Since(start).Round(time.Microsecond))
 			H5 := Style(H5, WithMetric(frame.Metric))
 			PrintText(msg, contentRect.Min, 0.0, 0.0, contentRect.Dx(), H5, ops)
 
