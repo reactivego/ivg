@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package gradient provides linear and radial gradient images.
-
 package render
 
 import (
