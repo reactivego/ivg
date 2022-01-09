@@ -38,12 +38,19 @@ func WithDriver(driver Driver) Option {
 	}
 }
 
-func Rasterize(i ivg.Icon, rect image.Rectangle, options ...Option) (op.CallOp, error) {
+func Rasterize(icon ivg.Icon, rect image.Rectangle, options ...Option) (op.CallOp, error) {
 	opts := Options{Driver: Gio}
 	for _, option := range options {
 		option(&opts)
 	}
-	return opts.Driver(i, rect, opts.Colors...)
+	return opts.Driver(icon, rect, opts.Colors...)
+}
+
+func Draw(icon ivg.Icon, rect image.Rectangle, fill color.Color, ops *op.Ops) error {
+	r := &render.Renderer{}
+	z := &Rasterizer{Ops: ops}
+	r.SetRasterizer(z, rect)
+	return icon.RenderOn(r, fill)
 }
 
 // Gio is a driver based on "gioui.org/op/clip".
