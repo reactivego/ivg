@@ -132,7 +132,7 @@ func (FaviconImage) Name() string {
 	return "Favicon"
 }
 
-func (f FaviconImage) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
+func (f FaviconImage) RenderOn(dst ivg.Destination, col ...color.Color) error {
 	gen := generate.Generator{}
 	gen.SetDestination(dst)
 

@@ -131,7 +131,7 @@ func (GradientsImage) Name() string {
 	return "Gradients"
 }
 
-func (g GradientsImage) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
+func (g GradientsImage) RenderOn(dst ivg.Destination, col ...color.Color) error {
 	gen := generate.Generator{}
 	gen.SetDestination(dst)
 

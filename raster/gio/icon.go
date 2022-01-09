@@ -18,19 +18,19 @@ import (
 )
 
 type Options struct {
-	Colors []color.RGBA
+	Colors []color.Color
 	Driver Driver
 }
 
 type Option func(*Options)
 
-func WithColors(colors ...color.RGBA) Option {
+func WithColors(colors ...color.Color) Option {
 	return func(options *Options) {
 		options.Colors = colors
 	}
 }
 
-type Driver func(icon ivg.Icon, rect image.Rectangle, col ...color.RGBA) (op.CallOp, error)
+type Driver func(icon ivg.Icon, rect image.Rectangle, col ...color.Color) (op.CallOp, error)
 
 func WithDriver(driver Driver) Option {
 	return func(options *Options) {
@@ -47,7 +47,7 @@ func Rasterize(i ivg.Icon, rect image.Rectangle, options ...Option) (op.CallOp, 
 }
 
 // Gio is a driver based on "gioui.org/op/clip".
-func Gio(icon ivg.Icon, rect image.Rectangle, col ...color.RGBA) (op.CallOp, error) {
+func Gio(icon ivg.Icon, rect image.Rectangle, col ...color.Color) (op.CallOp, error) {
 	ops := new(op.Ops)
 	macro := op.Record(ops)
 	r := &render.Renderer{}
@@ -60,7 +60,7 @@ func Gio(icon ivg.Icon, rect image.Rectangle, col ...color.RGBA) (op.CallOp, err
 }
 
 // Vec is a driver based on "golang.org/x/image/vector".
-func Vec(icon ivg.Icon, rect image.Rectangle, col ...color.RGBA) (op.CallOp, error) {
+func Vec(icon ivg.Icon, rect image.Rectangle, col ...color.Color) (op.CallOp, error) {
 	ops := new(op.Ops)
 	macro := op.Record(ops)
 	r := &render.Renderer{}
@@ -102,7 +102,8 @@ func (c *IconCache) Rasterize(icon ivg.Icon, rect image.Rectangle, options ...Op
 	for _, option := range options {
 		option(&opts)
 	}
-	for _, c := range opts.Colors {
+	for _, col := range opts.Colors {
+		c := color.RGBAModel.Convert(col).(color.NRGBA)
 		data = append(data, c.R, c.G, c.B, c.A)
 	}
 	data = append(data, fmt.Sprintf("%v", opts.Driver)...)
@@ -141,7 +142,7 @@ func (i *Icon) Name() string {
 	return string(i.Data)
 }
 
-func (i *Icon) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
+func (i *Icon) RenderOn(dst ivg.Destination, col ...color.Color) error {
 	opts := []decode.DecodeOption{}
 	for idx, c := range col {
 		opts = append(opts, decode.WithColorAt(idx, c))

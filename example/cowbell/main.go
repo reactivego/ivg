@@ -133,7 +133,7 @@ func (CowbellImage) Name() string {
 	return "Cowbell"
 }
 
-func (c CowbellImage) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
+func (c CowbellImage) RenderOn(dst ivg.Destination, col ...color.Color) error {
 	gen := generate.Generator{}
 	gen.SetDestination(dst)
 
