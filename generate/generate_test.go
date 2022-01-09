@@ -169,7 +169,7 @@ func TestEncodeCowbell(t *testing.T) {
 			}
 		}
 
-		if err := gen.SetPathData(data.d, 0, false); err != nil {
+		if err := gen.SetPathData(data.d, 0); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -365,7 +365,10 @@ func TestEncodeFavicon(t *testing.T) {
 			adj -= 2
 		}
 
-		if err := gen.SetPathData(data.d, adj, true); err != nil {
+		fromVB := Concat(Translate(0, 0), Scale(1.0/32.0, 1.0/32.0))
+		toVB := Concat(Scale(64, 64), Translate(-32, -32))
+		gen.SetTransform(fromVB, toVB)
+		if err := gen.SetPathData(data.d, adj); err != nil {
 			t.Fatal(err)
 		}
 	}

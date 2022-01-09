@@ -95,7 +95,7 @@ func Favicon() {
 			tstack.Pop()
 
 			// scale the viewbox of the icon to the content rect
-			viewRect := favicon.AspectMeet(contentRect, 0.5, 0.5)
+			viewRect := favicon.AspectMeet(contentRect, ivg.Mid, ivg.Max)
 
 			// render actual content
 			start := time.Now()
@@ -227,7 +227,10 @@ func (f FaviconImage) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
 			}
 			adj -= 2
 		}
-		gen.SetPathData(path.d, adj, true)
+		fromVB := generate.Concat(generate.Translate(0, 0), generate.Scale(1.0/32, 1.0/32))
+		toVB := generate.Concat(generate.Scale(64, 64), generate.Translate(-32, -32))
+		gen.SetTransform(fromVB, toVB)
+		gen.SetPathData(path.d, adj)
 	}
 
 	return nil

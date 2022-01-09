@@ -259,7 +259,7 @@ func (c CowbellImage) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
 		default:
 			continue
 		}
-		gen.SetPathData(path.d, 0, false)
+		gen.SetPathData(path.d, 0)
 	}
 
 	return nil

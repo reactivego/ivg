@@ -34,7 +34,7 @@ func ActionInfo() {
 	gen := &generate.Generator{Destination: enc}
 	gen.Reset(ivg.ViewBox{MinX: 0, MinY: 0, MaxX: 48, MaxY: 48}, ivg.DefaultPalette)
 	gen.SetPathData("M24 4C12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 "+
-		"20-20S35.05 4 24 4zm2 30h-4V22h4v12zm0-16h-4v-4h4v4z", 0, false)
+		"20-20S35.05 4 24 4zm2 30h-4V22h4v12zm0-16h-4v-4h4v4z", 0)
 	actionInfoData, err := enc.Bytes()
 	if err != nil {
 		log.Fatal(err)
