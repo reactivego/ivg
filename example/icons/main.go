@@ -42,9 +42,9 @@ func Icons() {
 	)
 	type Backend struct {
 		Name   string
-		Driver gio.Driver
+		Drawer gio.Drawer
 	}
-	backend := Backend{"Gio", gio.Gio}
+	backend := Backend{"Gio", gio.DrawGio}
 	Grey300 := color.NRGBAModel.Convert(colornames.Grey300).(color.NRGBA)
 	Grey800 := color.NRGBAModel.Convert(colornames.Grey800).(color.NRGBA)
 	ops := new(op.Ops)
@@ -61,9 +61,9 @@ func Icons() {
 					if event.Type == pointer.Release {
 						switch backend.Name {
 						case "Gio":
-							backend = Backend{"Vec", gio.Vec}
+							backend = Backend{"Vec", gio.DrawVec}
 						case "Vec":
-							backend = Backend{"Gio", gio.Gio}
+							backend = Backend{"Gio", gio.DrawGio}
 						}
 					}
 				}
@@ -103,7 +103,7 @@ func Icons() {
 				log.Fatal(err)
 			}
 			viewRect := icon.AspectMeet(contentSize, 0.5, 0.5).Add(contentMin)
-			if callOp, err := gio.Rasterize(icon, viewRect, gio.WithColors(colornames.LightBlue600), gio.WithDriver(backend.Driver)); err == nil {
+			if callOp, err := gio.Rasterize(icon, viewRect, gio.WithColors(colornames.LightBlue600), gio.WithDrawer(backend.Drawer)); err == nil {
 				callOp.Add(ops)
 			} else {
 				log.Fatal(err)

@@ -46,9 +46,9 @@ func Cowbell() {
 
 	type Backend struct {
 		Name   string
-		Driver gio.Driver
+		Drawer gio.Drawer
 	}
-	backend := Backend{"Gio", gio.Gio}
+	backend := Backend{"Gio", gio.DrawGio}
 	var cowbell CowbellImage
 
 	for next := range window.Events() {
@@ -62,9 +62,9 @@ func Cowbell() {
 					if event.Type == pointer.Release {
 						switch backend.Name {
 						case "Gio":
-							backend = Backend{"Vec", gio.Vec}
+							backend = Backend{"Vec", gio.DrawVec}
 						case "Vec":
-							backend = Backend{"Gio", gio.Gio}
+							backend = Backend{"Gio", gio.DrawGio}
 						}
 					}
 				}
@@ -102,7 +102,7 @@ func Cowbell() {
 
 			// render actual content
 			start := time.Now()
-			if callOp, err := gio.Rasterize(cowbell, viewRect, gio.WithDriver(backend.Driver)); err == nil {
+			if callOp, err := gio.Rasterize(cowbell, viewRect, gio.WithDrawer(backend.Drawer)); err == nil {
 				callOp.Add(ops)
 			} else {
 				log.Fatal(err)

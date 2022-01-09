@@ -17,9 +17,37 @@ import (
 	"github.com/reactivego/ivg/render"
 )
 
+// Draw is a drawer based on "gioui.org/op/clip".
+func Draw(ops *op.Ops, icon ivg.Icon, rect image.Rectangle, col ...color.Color) error {
+	r := &render.Renderer{}
+	z := &Rasterizer{Ops: ops}
+	r.SetRasterizer(z, rect)
+	return icon.RenderOn(r, col...)
+}
+
+// DrawGio is a shortcut to the default Draw func based on "gioui.org/op/clip".
+var DrawGio = Draw
+
+// DrawVec is a drawer based on "golang.org/x/image/vector".
+func DrawVec(ops *op.Ops, icon ivg.Icon, rect image.Rectangle, col ...color.Color) error {
+	r := &render.Renderer{}
+	offset := rect.Min
+	bounds := image.Rect(0, 0, rect.Dx(), rect.Dy())
+	z := &vec.Rasterizer{Dst: image.NewRGBA(bounds), DrawOp: draw.Src}
+	r.SetRasterizer(z, bounds)
+	if err := icon.RenderOn(r, col...); err != nil {
+		return err
+	}
+	paint.NewImageOp(z.Dst).Add(ops)
+	tstack := op.Offset(f32.Pt(float32(offset.X), float32(offset.Y))).Push(ops)
+	paint.PaintOp{}.Add(ops)
+	tstack.Pop()
+	return nil
+}
+
 type Options struct {
 	Colors []color.Color
-	Driver Driver
+	Draw   Drawer
 }
 
 type Option func(*Options)
@@ -30,59 +58,23 @@ func WithColors(colors ...color.Color) Option {
 	}
 }
 
-type Driver func(icon ivg.Icon, rect image.Rectangle, col ...color.Color) (op.CallOp, error)
+type Drawer func(ops *op.Ops, icon ivg.Icon, rect image.Rectangle, col ...color.Color) error
 
-func WithDriver(driver Driver) Option {
+func WithDrawer(drawer Drawer) Option {
 	return func(options *Options) {
-		options.Driver = driver
+		options.Draw = drawer
 	}
 }
 
 func Rasterize(icon ivg.Icon, rect image.Rectangle, options ...Option) (op.CallOp, error) {
-	opts := Options{Driver: Gio}
+	opts := Options{Draw: Draw}
 	for _, option := range options {
 		option(&opts)
 	}
-	return opts.Driver(icon, rect, opts.Colors...)
-}
-
-func Draw(icon ivg.Icon, rect image.Rectangle, fill color.Color, ops *op.Ops) error {
-	r := &render.Renderer{}
-	z := &Rasterizer{Ops: ops}
-	r.SetRasterizer(z, rect)
-	return icon.RenderOn(r, fill)
-}
-
-// Gio is a driver based on "gioui.org/op/clip".
-func Gio(icon ivg.Icon, rect image.Rectangle, col ...color.Color) (op.CallOp, error) {
 	ops := new(op.Ops)
 	macro := op.Record(ops)
-	r := &render.Renderer{}
-	z := &Rasterizer{Ops: ops}
-	r.SetRasterizer(z, rect)
-	if err := icon.RenderOn(r, col...); err != nil {
-		return op.CallOp{}, err
-	}
-	return macro.Stop(), nil
-}
-
-// Vec is a driver based on "golang.org/x/image/vector".
-func Vec(icon ivg.Icon, rect image.Rectangle, col ...color.Color) (op.CallOp, error) {
-	ops := new(op.Ops)
-	macro := op.Record(ops)
-	r := &render.Renderer{}
-	offset := rect.Min
-	bounds := image.Rect(0, 0, rect.Dx(), rect.Dy())
-	z := &vec.Rasterizer{Dst: image.NewRGBA(bounds), DrawOp: draw.Src}
-	r.SetRasterizer(z, bounds)
-	if err := icon.RenderOn(r, col...); err != nil {
-		return op.CallOp{}, err
-	}
-	paint.NewImageOp(z.Dst).Add(ops)
-	tstack := op.Offset(f32.Pt(float32(offset.X), float32(offset.Y))).Push(ops)
-	paint.PaintOp{}.Add(ops)
-	tstack.Pop()
-	return macro.Stop(), nil
+	err := opts.Draw(ops, icon, rect, opts.Colors...)
+	return macro.Stop(), err
 }
 
 // IconCache is an icon cache that caches op.CallOp values returned by a call to
@@ -105,7 +97,7 @@ func NewIconCache() *IconCache {
 // rectangle 'rect' overiding colors with the colors 'col'.
 func (c *IconCache) Rasterize(icon ivg.Icon, rect image.Rectangle, options ...Option) (op.CallOp, error) {
 	data := []byte(icon.Name())
-	opts := Options{Driver: Gio}
+	opts := Options{Draw: Draw}
 	for _, option := range options {
 		option(&opts)
 	}
@@ -113,17 +105,19 @@ func (c *IconCache) Rasterize(icon ivg.Icon, rect image.Rectangle, options ...Op
 		c := color.RGBAModel.Convert(col).(color.NRGBA)
 		data = append(data, c.R, c.G, c.B, c.A)
 	}
-	data = append(data, fmt.Sprintf("%v", opts.Driver)...)
+	data = append(data, fmt.Sprintf("%v", opts.Draw)...)
 	key := key{md5.Sum(data), rect}
 	if callOp, present := c.item[key]; present {
 		return callOp, nil
 	}
-	if callOp, err := opts.Driver(icon, rect, opts.Colors...); err == nil {
+	ops := new(op.Ops)
+	macro := op.Record(ops)
+	err := opts.Draw(ops, icon, rect, opts.Colors...)
+	callOp := macro.Stop()
+	if err == nil {
 		c.item[key] = callOp
-		return callOp, nil
-	} else {
-		return op.CallOp{}, err
 	}
+	return callOp, err
 }
 
 // Icon is an icon that implements the ivg.Icon interface.

@@ -44,9 +44,9 @@ func Gradients() {
 	)
 	type Backend struct {
 		Name   string
-		Driver gio.Driver
+		Drawer gio.Drawer
 	}
-	backend := Backend{"Gio", gio.Gio}
+	backend := Backend{"Gio", gio.DrawGio}
 	Grey300 := color.NRGBAModel.Convert(colornames.Grey300).(color.NRGBA)
 	Grey800 := color.NRGBAModel.Convert(colornames.Grey800).(color.NRGBA)
 	gradients := GradientsImage{}
@@ -63,9 +63,9 @@ func Gradients() {
 					if event.Type == pointer.Release {
 						switch backend.Name {
 						case "Gio":
-							backend = Backend{"Vec", gio.Vec}
+							backend = Backend{"Vec", gio.DrawVec}
 						case "Vec":
-							backend = Backend{"Gio", gio.Gio}
+							backend = Backend{"Gio", gio.DrawGio}
 						}
 					}
 				}
@@ -100,7 +100,7 @@ func Gradients() {
 
 			// render actual content
 			start := time.Now()
-			if callOp, err := gio.Rasterize(gradients, viewRect, gio.WithDriver(backend.Driver)); err == nil {
+			if callOp, err := gio.Rasterize(gradients, viewRect, gio.WithDrawer(backend.Drawer)); err == nil {
 				callOp.Add(ops)
 			} else {
 				log.Fatal(err)
