@@ -30,7 +30,7 @@ func WithColors(colors ...color.RGBA) Option {
 	}
 }
 
-type Driver func(icon ivg.Icon, rect f32.Rectangle, col ...color.RGBA) (op.CallOp, error)
+type Driver func(icon ivg.Icon, rect image.Rectangle, col ...color.RGBA) (op.CallOp, error)
 
 func WithDriver(driver Driver) Option {
 	return func(options *Options) {
@@ -38,7 +38,7 @@ func WithDriver(driver Driver) Option {
 	}
 }
 
-func Rasterize(i ivg.Icon, rect f32.Rectangle, options ...Option) (op.CallOp, error) {
+func Rasterize(i ivg.Icon, rect image.Rectangle, options ...Option) (op.CallOp, error) {
 	opts := Options{Driver: Gio}
 	for _, option := range options {
 		option(&opts)
@@ -47,12 +47,12 @@ func Rasterize(i ivg.Icon, rect f32.Rectangle, options ...Option) (op.CallOp, er
 }
 
 // Gio is a driver based on "gioui.org/op/clip".
-func Gio(icon ivg.Icon, rect f32.Rectangle, col ...color.RGBA) (op.CallOp, error) {
+func Gio(icon ivg.Icon, rect image.Rectangle, col ...color.RGBA) (op.CallOp, error) {
 	ops := new(op.Ops)
 	macro := op.Record(ops)
 	r := &render.Renderer{}
 	z := &Rasterizer{Ops: ops}
-	r.SetRasterizer(z, image.Rect(int(rect.Min.X), int(rect.Min.Y), int(rect.Max.X), int(rect.Max.Y)))
+	r.SetRasterizer(z, rect)
 	if err := icon.RenderOn(r, col...); err != nil {
 		return op.CallOp{}, err
 	}
@@ -60,19 +60,19 @@ func Gio(icon ivg.Icon, rect f32.Rectangle, col ...color.RGBA) (op.CallOp, error
 }
 
 // Vec is a driver based on "golang.org/x/image/vector".
-func Vec(icon ivg.Icon, rect f32.Rectangle, col ...color.RGBA) (op.CallOp, error) {
+func Vec(icon ivg.Icon, rect image.Rectangle, col ...color.RGBA) (op.CallOp, error) {
 	ops := new(op.Ops)
 	macro := op.Record(ops)
 	r := &render.Renderer{}
 	offset := rect.Min
-	bounds := image.Rect(0, 0, int(rect.Dx()), int(rect.Dy()))
+	bounds := image.Rect(0, 0, rect.Dx(), rect.Dy())
 	z := &vec.Rasterizer{Dst: image.NewRGBA(bounds), DrawOp: draw.Src}
 	r.SetRasterizer(z, bounds)
 	if err := icon.RenderOn(r, col...); err != nil {
 		return op.CallOp{}, err
 	}
 	paint.NewImageOp(z.Dst).Add(ops)
-	tstack := op.Offset(offset).Push(ops)
+	tstack := op.Offset(f32.Pt(float32(offset.X), float32(offset.Y))).Push(ops)
 	paint.PaintOp{}.Add(ops)
 	tstack.Pop()
 	return macro.Stop(), nil
@@ -86,7 +86,7 @@ type IconCache struct {
 
 type key struct {
 	checksum [md5.Size]byte
-	rect     f32.Rectangle
+	rect     image.Rectangle
 }
 
 // NewIconCache returns a new icon cache.
@@ -96,7 +96,7 @@ func NewIconCache() *IconCache {
 
 // Rasterize returns a gio op.CallOp that paints the 'icon' inside the given
 // rectangle 'rect' overiding colors with the colors 'col'.
-func (c *IconCache) Rasterize(icon ivg.Icon, rect f32.Rectangle, options ...Option) (op.CallOp, error) {
+func (c *IconCache) Rasterize(icon ivg.Icon, rect image.Rectangle, options ...Option) (op.CallOp, error) {
 	data := []byte(icon.Name())
 	opts := Options{Driver: Gio}
 	for _, option := range options {
@@ -149,16 +149,18 @@ func (i *Icon) RenderOn(dst ivg.Destination, col ...color.RGBA) error {
 	return decode.Decode(dst, i.Data, opts...)
 }
 
-func (i *Icon) AspectMeet(rect f32.Rectangle, ax, ay float32) f32.Rectangle {
-	return f32.Rect(i.ViewBox.AspectMeet(rect.Min.X, rect.Min.Y, rect.Max.X, rect.Max.Y, ax, ay))
+func (i *Icon) AspectMeet(size image.Point, ax, ay float32) image.Rectangle {
+	minx, miny, maxx, maxy := i.ViewBox.AspectMeet(float32(size.X), float32(size.Y), ax, ay)
+	return image.Rect(int(minx), int(miny), int(maxx), int(maxy))
 }
 
-func (i *Icon) AspectSlice(rect f32.Rectangle, ax, ay float32) f32.Rectangle {
-	return f32.Rect(i.ViewBox.AspectSlice(rect.Min.X, rect.Min.Y, rect.Max.X, rect.Max.Y, ax, ay))
+func (i *Icon) AspectSlice(size image.Point, ax, ay float32) image.Rectangle {
+	minx, miny, maxx, maxy := i.ViewBox.AspectSlice(float32(size.X), float32(size.Y), ax, ay)
+	return image.Rect(int(minx), int(miny), int(maxx), int(maxy))
 }
 
 func (i *Icon) Layout(ops *op.Ops, sz int, c color.RGBA) image.Point {
-	rect := i.AspectMeet(f32.Rect(0, 0, float32(sz), float32(sz)), ivg.Mid, ivg.Mid)
+	rect := i.AspectMeet(image.Pt(sz, sz), ivg.Mid, ivg.Mid)
 	if sz != i.imgSize || c != i.imgColor {
 		if callOp, err := Rasterize(i, rect, WithColors(c)); err != nil {
 			return image.Pt(0, 0)
@@ -169,5 +171,5 @@ func (i *Icon) Layout(ops *op.Ops, sz int, c color.RGBA) image.Point {
 		}
 	}
 	i.callOp.Add(ops)
-	return image.Pt(sz, int(rect.Max.Y))
+	return image.Pt(sz, rect.Max.Y)
 }

@@ -86,6 +86,8 @@ func Cowbell() {
 			contentRect := f32.Rect(
 				float32(frame.Metric.Px(minX)), float32(frame.Metric.Px(minY)),
 				float32(frame.Metric.Px(maxX)), float32(frame.Metric.Px(maxY)))
+			contentMin := image.Pt(int(contentRect.Min.X), int(contentRect.Min.Y))
+			contentSize := image.Pt(int(contentRect.Dx()), int(contentRect.Dy()))
 
 			// fill content rect
 			paint.ColorOp{Color: grey300}.Add(ops)
@@ -96,7 +98,7 @@ func Cowbell() {
 			tstack.Pop()
 
 			// scale the viewbox of the icon to the content rect
-			viewRect := cowbell.AspectMeet(contentRect, ivg.Mid, ivg.Mid)
+			viewRect := cowbell.AspectMeet(contentSize, ivg.Mid, ivg.Mid).Add(contentMin)
 
 			// render actual content
 			start := time.Now()
@@ -122,9 +124,9 @@ var CowbellViewBox = ivg.ViewBox{
 	MaxX: +48, MaxY: +48,
 }
 
-func (c CowbellImage) AspectMeet(rect f32.Rectangle, ax, ay float32) f32.Rectangle {
-	l, t, r, b := rect.Min.X, rect.Min.Y, rect.Max.X, rect.Max.Y
-	return f32.Rect(CowbellViewBox.AspectMeet(l, t, r, b, ax, ay))
+func (c CowbellImage) AspectMeet(size image.Point, ax, ay float32) image.Rectangle {
+	minx, miny, maxx, maxy := CowbellViewBox.AspectMeet(float32(size.X), float32(size.Y), ax, ay)
+	return image.Rect(int(minx), int(miny), int(maxx), int(maxy))
 }
 
 func (CowbellImage) Name() string {

@@ -56,9 +56,8 @@ func PlayArrow() {
     for event := range window.Events() {
         if frame, ok := event.(system.FrameEvent); ok {
             ops.Reset()
-            contentRect := f32.Rect(0, 0, float32(frame.Size.X), float32(frame.Size.Y))
 
-            viewRect := playArrow.AspectMeet(contentRect, 0.5, 0.5)
+            viewRect := playArrow.AspectMeet(frame.Size, 0.5, 0.5)
             blue := color.RGBA{0x21, 0x96, 0xf3, 0xff}
             callOp, err := gio.Rasterize(playArrow, viewRect, gio.WithColors(blue))
 
@@ -137,8 +136,7 @@ func ActionInfo() {
     for next := range window.Events() {
         if frame, ok := next.(system.FrameEvent); ok {
             ops.Reset()
-            contentRect := f32.Rect(0, 0, float32(frame.Size.X), float32(frame.Size.Y))
-            viewRect := actionInfo.AspectMeet(contentRect, ivg.Mid, ivg.Mid)
+            viewRect := actionInfo.AspectMeet(frame.Size, ivg.Mid, ivg.Mid)
             blue := color.RGBA{0x21, 0x96, 0xf3, 0xff}
             if callOp, err := cache.Rasterize(actionInfo, viewRect, gio.WithColors(blue)); err == nil {
                 callOp.Add(ops)
@@ -241,11 +239,13 @@ func Icons() {
             contentRect := f32.Rect(
                 float32(frame.Metric.Px(minX)), float32(frame.Metric.Px(minY)),
                 float32(frame.Metric.Px(maxX)), float32(frame.Metric.Px(maxY)))
+            contentMin := image.Point(int(contentRect.Min.X),int(contentRect.Min.Y))
+            contentSize := image.Point(int(contentRect.Dx()),int(contentRect.Dy()))
 
             // fill content rect
             paint.ColorOp{Color: Grey300}.Add(ops)
             tstack := op.Offset(contentRect.Min).Push(ops)
-            cstack := clip.Rect(image.Rect(0, 0, int(contentRect.Dx()), int(contentRect.Dy()))).Push(ops)
+            cstack := clip.Rect(image.Rectangle{Max: contentSize}).Push(ops)
             paint.PaintOp{}.Add(ops)
             cstack.Pop()
             tstack.Pop()
@@ -259,7 +259,7 @@ func Icons() {
             if err != nil {
                 log.Fatal(err)
             }
-            viewRect := icon.AspectMeet(contentRect, 0.5, 0.5)
+            viewRect := icon.AspectMeet(contentSize, 0.5, 0.5).Add(contentMin)
             if callOp, err := gio.Rasterize(icon, viewRect, gio.WithColors(colornames.LightBlue600), gio.WithDriver(backend.Driver)); err == nil {
                 callOp.Add(ops)
             } else {

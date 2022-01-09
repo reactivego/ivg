@@ -85,17 +85,19 @@ func Favicon() {
 			contentRect := f32.Rect(
 				float32(frame.Metric.Px(minX)), float32(frame.Metric.Px(minY)),
 				float32(frame.Metric.Px(maxX)), float32(frame.Metric.Px(maxY)))
+			contentMin := image.Pt(int(contentRect.Min.X), int(contentRect.Min.Y))
+			contentSize := image.Pt(int(contentRect.Dx()), int(contentRect.Dy()))
 
 			// fill content rect
 			paint.ColorOp{Color: Grey300}.Add(ops)
 			tstack := op.Offset(contentRect.Min).Push(ops)
-			cstack := clip.Rect(image.Rect(0, 0, int(contentRect.Dx()), int(contentRect.Dy()))).Push(ops)
+			cstack := clip.Rect(image.Rectangle{Max: contentSize}).Push(ops)
 			paint.PaintOp{}.Add(ops)
 			cstack.Pop()
 			tstack.Pop()
 
 			// scale the viewbox of the icon to the content rect
-			viewRect := favicon.AspectMeet(contentRect, ivg.Mid, ivg.Max)
+			viewRect := favicon.AspectMeet(contentSize, ivg.Mid, ivg.Max).Add(contentMin)
 
 			// render actual content
 			start := time.Now()
@@ -121,8 +123,9 @@ var FaviconViewBox = ivg.ViewBox{
 	MaxX: +48, MaxY: +48,
 }
 
-func (f FaviconImage) AspectMeet(rect f32.Rectangle, ax, ay float32) f32.Rectangle {
-	return f32.Rect(FaviconViewBox.AspectMeet(rect.Min.X, rect.Min.Y, rect.Max.X, rect.Max.Y, ax, ay))
+func (f FaviconImage) AspectMeet(size image.Point, ax, ay float32) image.Rectangle {
+	minx, miny, maxx, maxy := FaviconViewBox.AspectMeet(float32(size.X), float32(size.Y), ax, ay)
+	return image.Rect(int(minx), int(miny), int(maxx), int(maxy))
 }
 
 func (FaviconImage) Name() string {

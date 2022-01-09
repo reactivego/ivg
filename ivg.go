@@ -37,45 +37,43 @@ func (v ViewBox) Size() (dx, dy float32) {
 	return v.MaxX - v.MinX, v.MaxY - v.MinY
 }
 
-// AspectMeet fits the ViewBox inside the rect maintaining its aspect ratio.
+// AspectMeet fits the ViewBox inside a rectangle of size dx,dy maintaining its aspect ratio.
 // The ax, ay argument determine the position of the resized viewbox in the
-// given rect. For example ax = Mid, ay = Mid will position the resized
-// viewbox always in the middle of the rect
-func (v ViewBox) AspectMeet(minX, minY, maxX, maxY float32, ax, ay float32) (MinX, MinY, MaxX, MaxY float32) {
-	rdx, rdy := maxX-minX, maxY-minY
+// given rectangle. For example ax = Mid, ay = Mid will position the resized
+// viewbox always in the middle of the rectangle.
+func (v ViewBox) AspectMeet(dx, dy float32, ax, ay float32) (MinX, MinY, MaxX, MaxY float32) {
 	vdx, vdy := v.Size()
 	vbAR := vdx / vdy
-	vdx, vdy = rdx, rdy
+	vdx, vdy = dx, dy
 	if vdx/vdy < vbAR {
 		vdy = vdx / vbAR
 	} else {
 		vdx = vdy * vbAR
 	}
-	minX += (rdx - vdx) * ax
-	maxX = minX + vdx
-	minY += (rdy - vdy) * ay
-	maxY = minY + vdy
+	minX := (dx - vdx) * ax
+	maxX := minX + vdx
+	minY := (dy - vdy) * ay
+	maxY := minY + vdy
 	return minX, minY, maxX, maxY
 }
 
-// AspectSlice fills the rect maintaining the ViewBox's aspect ratio. The ax,
-// ay argument determine the position of the resized viewbox in the given
-// rect. For example ax = Mid, ay = Mid will position the resized viewbox
-// always in the middle of the rect
-func (v ViewBox) AspectSlice(minX, minY, maxX, maxY float32, ax, ay float32) (MinX, MinY, MaxX, MaxY float32) {
-	rdx, rdy := maxX-minX, maxY-minY
+// AspectSlice fills the rectangle of size dx,dy maintaining the ViewBox's aspect ratio.
+// The ax,ay arguments determine the position of the resized viewbox in the given
+// rectangle. For example ax = Mid, ay = Mid will position the resized viewbox
+// always in the middle of the rectangle
+func (v ViewBox) AspectSlice(dx, dy float32, ax, ay float32) (MinX, MinY, MaxX, MaxY float32) {
 	vdx, vdy := v.Size()
 	vbAR := vdx / vdy
-	vdx, vdy = rdx, rdy
+	vdx, vdy = dx, dy
 	if vdx/vdy < vbAR {
 		vdx = vdy * vbAR
 	} else {
 		vdy = vdx / vbAR
 	}
-	minX += (rdx - vdx) * ax
-	maxX = minX + vdx
-	minY += (rdy - vdy) * ay
-	maxY = minY + vdy
+	minX := (dx - vdx) * ax
+	maxX := minX + vdx
+	minY := (dy - vdy) * ay
+	maxY := minY + vdy
 	return minX, minY, maxX, maxY
 }
 

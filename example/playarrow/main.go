@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"gioui.org/app"
-	"gioui.org/f32"
 	"gioui.org/io/system"
 	"gioui.org/op"
 	"gioui.org/unit"
@@ -38,9 +37,8 @@ func PlayArrow() {
 	for event := range window.Events() {
 		if frame, ok := event.(system.FrameEvent); ok {
 			ops.Reset()
-			contentRect := f32.Rect(0, 0, float32(frame.Size.X), float32(frame.Size.Y))
 
-			viewRect := playArrow.AspectMeet(contentRect, 0.5, 0.5)
+			viewRect := playArrow.AspectMeet(frame.Size, 0.5, 0.5)
 			blue := color.RGBA{0x21, 0x96, 0xf3, 0xff}
 			callOp, err := gio.Rasterize(playArrow, viewRect, gio.WithColors(blue))
 

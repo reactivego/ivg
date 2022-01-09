@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"gioui.org/app"
-	"gioui.org/f32"
 	"gioui.org/io/system"
 	"gioui.org/op"
 	"gioui.org/unit"
@@ -48,8 +47,7 @@ func ActionInfo() {
 	for next := range window.Events() {
 		if frame, ok := next.(system.FrameEvent); ok {
 			ops.Reset()
-			contentRect := f32.Rect(0, 0, float32(frame.Size.X), float32(frame.Size.Y))
-			viewRect := actionInfo.AspectMeet(contentRect, ivg.Mid, ivg.Mid)
+			viewRect := actionInfo.AspectMeet(frame.Size, ivg.Mid, ivg.Mid)
 			blue := color.RGBA{0x21, 0x96, 0xf3, 0xff}
 			if callOp, err := cache.Rasterize(actionInfo, viewRect, gio.WithColors(blue)); err == nil {
 				callOp.Add(ops)

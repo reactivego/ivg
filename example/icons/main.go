@@ -82,11 +82,13 @@ func Icons() {
 			contentRect := f32.Rect(
 				float32(frame.Metric.Px(minX)), float32(frame.Metric.Px(minY)),
 				float32(frame.Metric.Px(maxX)), float32(frame.Metric.Px(maxY)))
+			contentMin := image.Pt(int(contentRect.Min.X), int(contentRect.Min.Y))
+			contentSize := image.Pt(int(contentRect.Dx()), int(contentRect.Dy()))
 
 			// fill content rect
 			paint.ColorOp{Color: Grey300}.Add(ops)
 			tstack := op.Offset(contentRect.Min).Push(ops)
-			cstack := clip.Rect(image.Rect(0, 0, int(contentRect.Dx()), int(contentRect.Dy()))).Push(ops)
+			cstack := clip.Rect(image.Rectangle{Max: contentSize}).Push(ops)
 			paint.PaintOp{}.Add(ops)
 			cstack.Pop()
 			tstack.Pop()
@@ -100,7 +102,7 @@ func Icons() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			viewRect := icon.AspectMeet(contentRect, 0.5, 0.5)
+			viewRect := icon.AspectMeet(contentSize, 0.5, 0.5).Add(contentMin)
 			if callOp, err := gio.Rasterize(icon, viewRect, gio.WithColors(colornames.LightBlue600), gio.WithDriver(backend.Driver)); err == nil {
 				callOp.Add(ops)
 			} else {
