@@ -1,7 +1,7 @@
 eliasnaur.com/font v0.0.0-20220215125817-de715634c840 h1:HovVBbKkUnf7OFR0qZy1PRB5CIabj+k5VRUDiIboM9c=
 eliasnaur.com/font v0.0.0-20220215125817-de715634c840/go.mod h1:OYVuxibdk9OSLX8vAqydtRPP87PyTFcT9uH3MlEGBQA=
-gioui.org v0.0.0-20220531082409-b5f12c5f2627 h1:5yp7sYOUR+8Ma57tyKhzOeDUcpNbx2INX3kgOppvByg=
-gioui.org v0.0.0-20220531082409-b5f12c5f2627/go.mod h1:WHoHbUjH91BJS2xkfps2AhKxji+9o3xwfsphGsCBfnM=
+gioui.org v0.0.0-20220601100144-a896a467ecae h1:ltrl0QzH77PTDycz9yiP5VRlrfY66MOoV/sfstOa7as=
+gioui.org v0.0.0-20220601100144-a896a467ecae/go.mod h1:WHoHbUjH91BJS2xkfps2AhKxji+9o3xwfsphGsCBfnM=
 gioui.org/cpu v0.0.0-20210808092351-bfe733dd3334/go.mod h1:A8M0Cn5o+vY5LTMlnRoK3O5kG+rH0kWfJjeKd9QpBmQ=
 gioui.org/cpu v0.0.0-20220412190645-f1e9e8c3b1f7 h1:tNJdnP5CgM39PRc+KWmBRRYX/zJ+rd5XaYxY5d5veqA=
 gioui.org/cpu v0.0.0-20220412190645-f1e9e8c3b1f7/go.mod h1:A8M0Cn5o+vY5LTMlnRoK3O5kG+rH0kWfJjeKd9QpBmQ=
@@ -55,6 +55,8 @@ golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7/go.mod h1:qpuaurCH72eLCgpAm/
 golang.org/x/net v0.0.0-20201021035429-f5854403a974/go.mod h1:sp8m0HH+o8qH0wwXwYZr8TS3Oi6o0r6Gce1SSxlDquU=
 golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb/go.mod h1:sp8m0HH+o8qH0wwXwYZr8TS3Oi6o0r6Gce1SSxlDquU=
 golang.org/x/net v0.0.0-20210510120150-4163338589ed/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
+golang.org/x/net v0.0.0-20220531201128-c960675eff93 h1:MYimHLfoXEpOhqd/zgoA/uoXzHB86AEky4LAx5ij9xA=
+golang.org/x/net v0.0.0-20220531201128-c960675eff93/go.mod h1:XRhObCWvk6IyKnWLug+ECip1KBveYUHfp+8e9klMJ9c=
 golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
