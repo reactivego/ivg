@@ -78,11 +78,11 @@ func Favicon() {
 
 			// device independent content rect calculation
 			margin := unit.Dp(12)
-			minX := frame.Metric.Dp(margin + frame.Insets.Left)
-			minY := frame.Metric.Dp(margin + frame.Insets.Top)
-			maxX := frame.Size.X - frame.Metric.Dp(frame.Insets.Right+margin)
-			maxY := frame.Size.Y - frame.Metric.Dp(frame.Insets.Bottom+margin)
-			contentRect := image.Rect(minX, minY, maxX, maxY)
+			contentRect := image.Rect(
+				frame.Metric.Dp(margin+frame.Insets.Left),
+				frame.Metric.Dp(margin+frame.Insets.Top),
+				frame.Size.X-frame.Metric.Dp(frame.Insets.Right+margin),
+				frame.Size.Y-frame.Metric.Dp(frame.Insets.Bottom+margin))
 
 			// fill content rect
 			paint.FillShape(ops, grey300, clip.Rect(contentRect).Op())
