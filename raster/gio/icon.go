@@ -102,7 +102,7 @@ func (c *IconCache) Rasterize(icon ivg.Icon, rect image.Rectangle, options ...Op
 		option(&opts)
 	}
 	for _, col := range opts.Colors {
-		c := color.RGBAModel.Convert(col).(color.NRGBA)
+		c := color.NRGBAModel.Convert(col).(color.NRGBA)
 		data = append(data, c.R, c.G, c.B, c.A)
 	}
 	data = append(data, fmt.Sprintf("%v", opts.Draw)...)
