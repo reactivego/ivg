@@ -17,7 +17,6 @@ import (
 	"golang.org/x/image/math/fixed"
 
 	"gioui.org/app"
-	"gioui.org/f32"
 	"gioui.org/font/opentype"
 	"gioui.org/io/pointer"
 	"gioui.org/io/system"
@@ -27,6 +26,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 
+	"github.com/reactivego/ivg"
 	"github.com/reactivego/ivg/raster/gio"
 )
 
@@ -45,8 +45,11 @@ func Icons() {
 		Drawer gio.Drawer
 	}
 	backend := Backend{"Gio", gio.DrawGio}
-	Grey300 := color.NRGBAModel.Convert(colornames.Grey300).(color.NRGBA)
-	Grey800 := color.NRGBAModel.Convert(colornames.Grey800).(color.NRGBA)
+
+	grey300 := color.NRGBAModel.Convert(colornames.Grey300).(color.NRGBA)
+	grey800 := color.NRGBAModel.Convert(colornames.Grey800).(color.NRGBA)
+	black := color.NRGBA{A: 255}
+
 	ops := new(op.Ops)
 	backdrop := new(int)
 	index := 0
@@ -70,28 +73,19 @@ func Icons() {
 			}
 
 			// fill the whole backdrop rectangle
-			paint.ColorOp{Color: Grey800}.Add(ops)
+			paint.ColorOp{Color: grey800}.Add(ops)
 			paint.PaintOp{}.Add(ops)
 
 			// device independent content rect calculation
 			margin := unit.Dp(12)
-			minX := unit.Add(frame.Metric, margin, frame.Insets.Left)
-			minY := unit.Add(frame.Metric, margin, frame.Insets.Top)
-			maxX := unit.Add(frame.Metric, unit.Px(float32(frame.Size.X)), frame.Insets.Right.Scale(-1), margin.Scale(-1))
-			maxY := unit.Add(frame.Metric, unit.Px(float32(frame.Size.Y)), frame.Insets.Bottom.Scale(-1), margin.Scale(-1))
-			contentRect := f32.Rect(
-				float32(frame.Metric.Px(minX)), float32(frame.Metric.Px(minY)),
-				float32(frame.Metric.Px(maxX)), float32(frame.Metric.Px(maxY)))
-			contentMin := image.Pt(int(contentRect.Min.X), int(contentRect.Min.Y))
-			contentSize := image.Pt(int(contentRect.Dx()), int(contentRect.Dy()))
+			minX := frame.Metric.Dp(margin + frame.Insets.Left)
+			minY := frame.Metric.Dp(margin + frame.Insets.Top)
+			maxX := frame.Size.X - frame.Metric.Dp(frame.Insets.Right+margin)
+			maxY := frame.Size.Y - frame.Metric.Dp(frame.Insets.Bottom+margin)
+			contentRect := image.Rect(minX, minY, maxX, maxY)
 
 			// fill content rect
-			paint.ColorOp{Color: Grey300}.Add(ops)
-			tstack := op.Offset(contentRect.Min).Push(ops)
-			cstack := clip.Rect(image.Rectangle{Max: contentSize}).Push(ops)
-			paint.PaintOp{}.Add(ops)
-			cstack.Pop()
-			tstack.Pop()
+			paint.FillShape(ops, grey300, clip.Rect(contentRect).Op())
 
 			// select next icon and paint
 			n := uint(len(IconCollection))
@@ -102,15 +96,14 @@ func Icons() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			viewRect := icon.AspectMeet(contentSize, 0.5, 0.5).Add(contentMin)
+			viewRect := icon.AspectMeet(contentRect.Size(), ivg.Mid, ivg.Mid).Add(contentRect.Min)
 			if callOp, err := gio.Rasterize(icon, viewRect, gio.WithColors(colornames.LightBlue600), gio.WithDrawer(backend.Drawer)); err == nil {
 				callOp.Add(ops)
 			} else {
 				log.Fatal(err)
 			}
 			msg := fmt.Sprintf("%s (%v)", backend.Name, time.Since(start).Round(time.Microsecond))
-			H5 := Style(H5, WithMetric(frame.Metric))
-			PrintText(msg, contentRect.Min, 0.0, 0.0, contentRect.Dx(), H5, ops)
+			H5.Text(ops, frame.Metric, contentRect, 0.0, 0.0, contentRect.Dx(), black, msg)
 
 			at := time.Now().Add(500 * time.Millisecond)
 			op.InvalidateOp{At: at}.Add(ops)
@@ -120,67 +113,43 @@ func Icons() {
 	os.Exit(0)
 }
 
-func PrintText(txt string, pt f32.Point, ax, ay, width float32, style TextStyle, ops *op.Ops) (dx, dy float32) {
-	size := fixed.I(style.Size)
-	lines := style.Cache.LayoutString(style.Font, size, int(width), txt)
+// Text Rendering
+
+var H5 = TextStyle{Shaper: Cache(), Font: RobotoNormal, Size: 24}
+
+type TextStyle struct {
+	Shaper text.Shaper
+	Font   text.Font
+	Size   unit.Sp
+}
+
+var Locale = system.Locale{Language: "en-US", Direction: system.LTR}
+
+func (s TextStyle) Text(ops *op.Ops, metric unit.Metric, rect image.Rectangle, ax, ay float32, maxWidth int, textColor color.NRGBA, txt string) (dx, dy int) {
+	size := fixed.I(metric.Sp(s.Size))
+	lines := s.Shaper.LayoutString(s.Font, size, maxWidth, Locale, txt)
 	for _, line := range lines {
-		dy += float32(line.Ascent.Ceil() + line.Descent.Ceil())
-		lineWidth := float32(line.Width.Ceil())
-		if dx < lineWidth {
-			dx = lineWidth
+		dy += line.Ascent.Ceil()
+		if dx < line.Width.Ceil() {
+			dx = line.Width.Ceil()
 		}
+		dy += line.Descent.Ceil()
 	}
-	offset := f32.Pt(pt.X-ax*dx, pt.Y-ay*dy)
+	offset := rect.Min.Add(image.Pt(int(ax*float32(rect.Dx()-dx)), int(ay*float32(rect.Dy()-dy))))
 	for _, line := range lines {
-		offset.Y += float32(line.Ascent.Ceil())
+		shape := clip.Outline{Path: s.Shaper.Shape(s.Font, size, line.Layout)}.Op()
+		offset.Y += line.Ascent.Ceil()
 		tstack := op.Offset(offset).Push(ops)
-		offset.Y += float32(line.Descent.Ceil())
-		cstack := style.Cache.Shape(style.Font, size, line.Layout).Push(ops)
-		paint.ColorOp{Color: style.Color}.Add(ops)
-		paint.PaintOp{}.Add(ops)
-		cstack.Pop()
+		paint.FillShape(ops, textColor, shape)
 		tstack.Pop()
+		offset.Y += line.Descent.Ceil()
 	}
 	return
 }
 
-// Text Styles
-
-var H5 = TextStyle{Font: RobotoNormal, Size: 24, Color: color.NRGBA{0, 0, 0, 255}, Cache: Cache()}
-
-type TextStyle struct {
-	Font  text.Font
-	Size  int
-	Color color.NRGBA
-	Cache *text.Cache
-}
-
-type StyleOption func(*TextStyle)
-
-func WithMetric(m unit.Metric) StyleOption {
-	return func(s *TextStyle) {
-		s.Size = m.Px(unit.Sp(float32(s.Size)))
-	}
-}
-
-func WithColor(c color.Color) StyleOption {
-	return func(s *TextStyle) {
-		s.Color = color.NRGBAModel.Convert(c).(color.NRGBA)
-	}
-}
-
-func Style(s TextStyle, options ...StyleOption) TextStyle {
-	for _, o := range options {
-		o(&s)
-	}
-	return s
-}
-
-// Fonts & Cache
-
 var RobotoNormal = text.Font{Typeface: "Roboto", Variant: "", Style: text.Regular, Weight: text.Normal}
 
-func Cache() *text.Cache {
+func Cache() text.Shaper {
 	cache.once.Do(func() {
 		face := func(ttf []byte) text.Face {
 			if face, err := opentype.Parse(ttf); err == nil {

@@ -120,7 +120,7 @@ func (v *Rasterizer) ClosePath() {
 
 func (v *Rasterizer) Draw(r image.Rectangle, src image.Image, sp image.Point) {
 	clip := v.Op()
-	tstack := op.Offset(f32.Pt(float32(r.Min.X), float32(r.Min.Y))).Push(v.Ops)
+	tstack := op.Offset(r.Min).Push(v.Ops)
 	cstack := clip.Push(v.Ops)
 	switch source := src.(type) {
 	case raster.GradientConfig:

@@ -7,7 +7,6 @@ import (
 	"image/color"
 	"image/draw"
 
-	"gioui.org/f32"
 	"gioui.org/op"
 	"gioui.org/op/paint"
 
@@ -39,7 +38,7 @@ func DrawVec(ops *op.Ops, icon ivg.Icon, rect image.Rectangle, col ...color.Colo
 		return err
 	}
 	paint.NewImageOp(z.Dst).Add(ops)
-	tstack := op.Offset(f32.Pt(float32(offset.X), float32(offset.Y))).Push(ops)
+	tstack := op.Offset(offset).Push(ops)
 	paint.PaintOp{}.Add(ops)
 	tstack.Pop()
 	return nil
