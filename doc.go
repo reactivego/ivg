@@ -3,15 +3,13 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package ivg provides rendering of IconVG icons in Gio.
+Package ivg provides rendering of IconVG icons.
 
 IconVG (github.com/google/iconvg) is a compact, binary format for simple
 vector graphics: icons, logos, glyphs and emoji.
 
-Gio (gioui.org) implements portable immediate mode GUI programs in Go.
-
 The code in this package does away with rendering the icon to an intermediate
-bitmap image and instead directly uses Gio's vector API.
+bitmap image and instead directly uses a vector Rasterizer interface.
 */
 package ivg
 

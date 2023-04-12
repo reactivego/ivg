@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Unlicense OR MIT
 
 // Package raster provides rasterizers for 2-D vector graphics. Sub-directory
-// gio provides an implementation based on gioui.org/op, while sub-directory
 // vec provides an implementation based on golang.org/x/image/vector.
 package raster
 
