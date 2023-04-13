@@ -174,6 +174,9 @@ type Icon interface {
 	// It is used to differentiate it from other icons in your program.
 	Name() string
 
+	// ViewBox is the ViewBox of the icon.
+	ViewBox() ViewBox
+
 	// RenderOn is called to let the icon render itself on
 	// a Destination with a list of color.Color overrides.
 	RenderOn(dst Destination, col ...color.Color) error
