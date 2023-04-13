@@ -5,14 +5,30 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/reactivego/ivg.svg)](https://pkg.go.dev/github.com/reactivego/ivg#section-documentation)
 
 Package `ivg` provides rendering of [IconVG](https://github.com/google/iconvg) icons using a Rasterizer interface.
-IconVG is a binary format for simple vector graphic icons and Gio is an immediate mode GUI for Go. 
+IconVG is a binary format for simple vector graphic icons.
 
-This package changes the original [IconVG](https://golang.org/x/exp/shiny/iconvg) code. It replaces the approach of rendering to an intermediate image. Instead it directly renders using a vector graphics Rasterizer interface.
+The original [IconVG](https://golang.org/x/exp/shiny/iconvg) code was changed to render an IconVG graphic using a vector graphics Rasterizer interface. The original code rendered to a bitmap image.
+The use of the rasterizer allows implementing different rasterizers for different purposes. For example, a rasterizer that renders to a bitmap image, or a rasterizer that renders to a gioui.org context.
 
 The name of the `iconvg` package has been changed to `ivg` so we don't confuse people about what's what.
 
+## File Format Versions
+
+In order for the IconVG format to support animation in future incarnations. The format was simplified and updated to version 1 (FFV1), renaming the original format to FFV0 retroactively.
+
+FFV1 targets representing static vector graphics icons, while the future FFV2 will target representing animated vector graphics icons.
+
+The rationale for this was dicussed in a github proposal: [File Format Versions 1, 2 and Beyond](https://github.com/google/iconvg/issues/4#issue-905297018)
+
+Below are links to the different File Format Versions of the spec:
+- [IconVG FFV0](spec/iconvg-spec-v0.md)
+- [IconVG FFV1](https://github.com/google/iconvg/blob/97b0c08e6e298f5f3606f79f3fb38cc0d64d3198/spec/iconvg-spec.md)
+
+> NOTE: This package implements the [FFV0](spec/iconvg-spec-v0.md) version of the IconVG format.
+
 ## Changes
 
+This package changes the original IconVG code in several ways.
 The most important changes w.r.t. the original IconVG code are:
 
 1. Separate code into packages with a clear purpose and responsibility for better cohesion and less coupling.
