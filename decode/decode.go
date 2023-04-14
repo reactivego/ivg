@@ -6,6 +6,7 @@ package decode
 
 import (
 	"bytes"
+	"fmt"
 	"image/color"
 	"math"
 
@@ -72,6 +73,29 @@ func DecodeViewBox(src []byte) (vb ivg.ViewBox, err error) {
 func Decode(dst ivg.Destination, src []byte, opts ...DecodeOption) error {
 	m := ivg.DefaultMetadata
 	return decode(dst, nil, &m, false, src, opts...)
+}
+
+// Disassemble returns a disassembly of an encoded IconVG graphic.
+func Disassemble(src []byte) ([]byte, error) {
+	w := new(bytes.Buffer)
+	p := func(b []byte, format string, args ...interface{}) {
+		const hex = "0123456789abcdef"
+		var buf [14]byte
+		for i := range buf {
+			buf[i] = ' '
+		}
+		for i, x := range b {
+			buf[3*i+0] = hex[x>>4]
+			buf[3*i+1] = hex[x&0x0f]
+		}
+		w.Write(buf[:])
+		fmt.Fprintf(w, format, args...)
+	}
+	m := ivg.Metadata{}
+	if err := decode(nil, p, &m, false, buffer(src)); err != nil {
+		return nil, err
+	}
+	return w.Bytes(), nil
 }
 
 func decode(dst ivg.Destination, p printer, m *ivg.Metadata, metadataOnly bool, src buffer, opts ...DecodeOption) (err error) {

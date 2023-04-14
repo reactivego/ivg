@@ -6,7 +6,6 @@ package decode
 
 import (
 	"bytes"
-	"fmt"
 	"image/color"
 	"os"
 	"path/filepath"
@@ -21,31 +20,6 @@ import (
 // overwriteTestdataFiles is temporarily set to true when adding new
 // testdataTestCases.
 const overwriteTestdataFiles = false
-
-// disassemble returns a disassembly of an encoded IconVG graphic. Users of
-// this package aren't expected to want to do this, so it lives in a _test.go
-// file, but it can be useful for debugging.
-func disassemble(src []byte) ([]byte, error) {
-	w := new(bytes.Buffer)
-	p := func(b []byte, format string, args ...interface{}) {
-		const hex = "0123456789abcdef"
-		var buf [14]byte
-		for i := range buf {
-			buf[i] = ' '
-		}
-		for i, x := range b {
-			buf[3*i+0] = hex[x>>4]
-			buf[3*i+1] = hex[x&0x0f]
-		}
-		w.Write(buf[:])
-		fmt.Fprintf(w, format, args...)
-	}
-	m := ivg.Metadata{}
-	if err := decode(nil, p, &m, false, buffer(src)); err != nil {
-		return nil, err
-	}
-	return w.Bytes(), nil
-}
 
 func diffLines(t *testing.T, got, want string) {
 	gotLines := strings.Split(got, "\n")
@@ -92,7 +66,7 @@ func TestDisassembly(t *testing.T) {
 			t.Errorf("%s: ReadFile: %v", tc.filename, err)
 			continue
 		}
-		got, err := disassemble(ivgData)
+		got, err := Disassemble(ivgData)
 		if err != nil {
 			t.Errorf("%s: disassemble: %v", tc.filename, err)
 			continue
@@ -139,8 +113,8 @@ func TestDecodeEncodeRoundTrip(t *testing.T) {
 		if want := ivgData; !bytes.Equal(got, want) {
 			t.Errorf("%s:\ngot  %d bytes (on GOOS=%s GOARCH=%s, using compiler %q):\n% x\nwant %d bytes:\n% x",
 				tc.filename, len(got), runtime.GOOS, runtime.GOARCH, runtime.Compiler, got, len(want), want)
-			gotDisasm, err1 := disassemble(got)
-			wantDisasm, err2 := disassemble(want)
+			gotDisasm, err1 := Disassemble(got)
+			wantDisasm, err2 := Disassemble(want)
 			if err1 == nil && err2 == nil {
 				diffLines(t, string(gotDisasm), string(wantDisasm))
 			}
