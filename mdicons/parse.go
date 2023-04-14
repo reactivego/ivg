@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"fmt"
 	"go/format"
-	"io/ioutil"
 	"os"
 	"sort"
 )
@@ -70,7 +69,7 @@ func Parse(mdicons string, pkg string, genData, genDataTest bool, outSize float3
 		if err != nil {
 			return fmt.Errorf("gofmt failed: %v\n\nGenerated code:\n%s", err, raw)
 		}
-		if err := ioutil.WriteFile("data.go", formatted, 0644); err != nil {
+		if err := os.WriteFile("data.go", formatted, 0644); err != nil {
 			return fmt.Errorf("WriteFile failed: %s", err)
 		}
 
@@ -88,7 +87,7 @@ func Parse(mdicons string, pkg string, genData, genDataTest bool, outSize float3
 			if err != nil {
 				return fmt.Errorf("gofmt failed: %v\n\nGenerated code:\n%s", err, raw)
 			}
-			if err := ioutil.WriteFile("data_test.go", formatted, 0644); err != nil {
+			if err := os.WriteFile("data_test.go", formatted, 0644); err != nil {
 				return fmt.Errorf("WriteFile failed: %s", err)
 			}
 		}

@@ -7,8 +7,8 @@ package encode
 import (
 	"bytes"
 	"image/color"
-	"io/ioutil"
 	"math"
+	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -35,12 +35,12 @@ func testEncode(t *testing.T, e *Encoder, wantFilename string) {
 		t.Fatalf("encoding: %v", err)
 	}
 	if overwriteTestdataFiles {
-		if err := ioutil.WriteFile(filepath.FromSlash(wantFilename), got, 0666); err != nil {
+		if err := os.WriteFile(filepath.FromSlash(wantFilename), got, 0666); err != nil {
 			t.Fatalf("WriteFile: %v", err)
 		}
 		return
 	}
-	want, err := ioutil.ReadFile(filepath.FromSlash(wantFilename))
+	want, err := os.ReadFile(filepath.FromSlash(wantFilename))
 	if err != nil {
 		t.Fatalf("ReadFile: %v", err)
 	}

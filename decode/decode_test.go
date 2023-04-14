@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"fmt"
 	"image/color"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -87,7 +87,7 @@ var testdataTestCases = []struct {
 
 func TestDisassembly(t *testing.T) {
 	for _, tc := range testdataTestCases {
-		ivgData, err := ioutil.ReadFile(filepath.FromSlash(tc.filename) + ".ivg")
+		ivgData, err := os.ReadFile(filepath.FromSlash(tc.filename) + ".ivg")
 		if err != nil {
 			t.Errorf("%s: ReadFile: %v", tc.filename, err)
 			continue
@@ -99,12 +99,12 @@ func TestDisassembly(t *testing.T) {
 		}
 		wantFilename := filepath.FromSlash(tc.filename) + ".ivg.disassembly"
 		if overwriteTestdataFiles {
-			if err := ioutil.WriteFile(filepath.FromSlash(wantFilename), got, 0666); err != nil {
+			if err := os.WriteFile(filepath.FromSlash(wantFilename), got, 0666); err != nil {
 				t.Errorf("%s: WriteFile: %v", tc.filename, err)
 			}
 			continue
 		}
-		want, err := ioutil.ReadFile(wantFilename)
+		want, err := os.ReadFile(wantFilename)
 		if err != nil {
 			t.Errorf("%s: ReadFile: %v", tc.filename, err)
 			continue
@@ -120,7 +120,7 @@ func TestDisassembly(t *testing.T) {
 // so check that we get the original bytes after a decode + encode round-trip.
 func TestDecodeEncodeRoundTrip(t *testing.T) {
 	for _, tc := range testdataTestCases {
-		ivgData, err := ioutil.ReadFile(filepath.FromSlash(tc.filename) + ".ivg")
+		ivgData, err := os.ReadFile(filepath.FromSlash(tc.filename) + ".ivg")
 		if err != nil {
 			t.Errorf("%s: ReadFile: %v", tc.filename, err)
 			continue

@@ -5,7 +5,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 
@@ -46,7 +46,7 @@ var ErrSkip = errors.New("skipping SVG to IconVG conversion")
 func ParseFile(fqSVGName, dirName, baseName string, size float32, outSize float32, out *bytes.Buffer) (Statistics, error) {
 	stat := Statistics{}
 
-	svgData, err := ioutil.ReadFile(fqSVGName)
+	svgData, err := os.ReadFile(fqSVGName)
 	if err != nil {
 		return stat, err
 	}

@@ -10,7 +10,6 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -99,7 +98,7 @@ var testdataTestCases = []struct {
 
 func TestRenderer(t *testing.T) {
 	for _, tc := range testdataTestCases {
-		ivgData, err := ioutil.ReadFile(filepath.FromSlash(tc.filename) + ".ivg")
+		ivgData, err := os.ReadFile(filepath.FromSlash(tc.filename) + ".ivg")
 		if err != nil {
 			t.Errorf("%s: ReadFile: %v", tc.filename, err)
 			continue
