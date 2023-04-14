@@ -2,11 +2,10 @@ package mdicons
 
 import (
 	"github.com/reactivego/ivg"
-	"github.com/reactivego/ivg/encode"
 	"golang.org/x/image/math/f32"
 )
 
-func ParsePath(enc *encode.Encoder, p *Path, adjs map[float32]uint8, size float32, offset f32.Vec2, outSize float32, circles []Circle) error {
+func ParsePath(enc ivg.Destination, p *Path, adjs map[float32]uint8, size float32, offset f32.Vec2, outSize float32, circles []Circle) error {
 	adj := uint8(0)
 	opacity := float32(1)
 	if p.Opacity != nil {

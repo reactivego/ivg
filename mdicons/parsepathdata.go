@@ -5,11 +5,11 @@ import (
 	"io"
 	"strings"
 
-	"github.com/reactivego/ivg/encode"
+	"github.com/reactivego/ivg"
 	"golang.org/x/image/math/f32"
 )
 
-func ParsePathData(enc *encode.Encoder, pathData string, adj uint8, size float32, offset f32.Vec2, outSize float32) error {
+func ParsePathData(enc ivg.Destination, pathData string, adj uint8, size float32, offset f32.Vec2, outSize float32) error {
 	pathData = strings.TrimSuffix(pathData, "z")
 	r := strings.NewReader(pathData)
 

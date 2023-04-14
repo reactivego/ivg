@@ -60,7 +60,8 @@ func ParseFile(fqSVGName, dirName, baseName string, size float32, outSize float3
 	stat.VarNames = []string{varName}
 
 	var enc encode.Encoder
-	enc.Reset(
+	var dest ivg.Destination = &enc
+	dest.Reset(
 		ivg.ViewBox{
 			MinX: -24, MinY: -24,
 			MaxX: +24, MaxY: +24},
@@ -96,14 +97,14 @@ func ParseFile(fqSVGName, dirName, baseName string, size float32, outSize float3
 		if fill, ok := skippedPaths[p.D]; ok && fill == p.Fill {
 			continue
 		}
-		if err := ParsePath(&enc, &p, adjs, size, offset, outSize, g.Circles); err != nil {
+		if err := ParsePath(dest, &p, adjs, size, offset, outSize, g.Circles); err != nil {
 			return stat, err
 		}
 		g.Circles = nil
 	}
 
 	if len(g.Circles) != 0 {
-		if err := ParsePath(&enc, &Path{}, adjs, size, offset, outSize, g.Circles); err != nil {
+		if err := ParsePath(dest, &Path{}, adjs, size, offset, outSize, g.Circles); err != nil {
 			return stat, err
 		}
 		g.Circles = nil
