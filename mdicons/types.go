@@ -1,7 +1,7 @@
 package mdicons
 
 type SVG struct {
-	Width   float32 `xml:"where,attr"`
+	Width   float32 `xml:"width,attr"`
 	Height  float32 `xml:"height,attr"`
 	ViewBox string  `xml:"viewBox,attr"`
 	Paths   []Path  `xml:"path"`
