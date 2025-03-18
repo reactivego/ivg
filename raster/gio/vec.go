@@ -1,4 +1,4 @@
-package ivg
+package gio
 
 import (
 	"image"

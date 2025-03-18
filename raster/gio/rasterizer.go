@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Unlicense OR MIT
 
-package clip
+package gio
 
 import (
 	"image"
