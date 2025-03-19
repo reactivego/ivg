@@ -130,13 +130,13 @@ type Rasterizer interface {
 Decoding a blob and rendering it to a `Rasterizer`:
 
 ```
-[]byte -> decode/Decoder -> [Destination]render/Renderer -> [Rasterizer]raster/vec/Rasterizer
+[]byte -> decode/Decoder -> [Destination]render/Renderer -> [Rasterizer]raster/img/Rasterizer
 ```
 
 To render and icon from SVG, the Generator can also be hooked up to the `Renderer` directly and the `Encoder`/`Decoder` phase would be skipped.
 
 ```
-svgicon/Parse -> generate/Generator -> [Destination]render/Renderer -> [Rasterizer]raster/vec/Rasterizer
+svgicon/Parse -> generate/Generator -> [Destination]render/Renderer -> [Rasterizer]raster/img/Rasterizer
 ```
 
 ## Changes
