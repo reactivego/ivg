@@ -157,14 +157,14 @@ The most important changes w.r.t. the original IconVG code are:
     - Declare interface `Rasterizer`.
     - Declare interface `GradientConfig` implemented by `Renderer`.
 11. Create a rasterizer using "golang.org/x/image/vector" in directory `raster/vec`
-12. Create examples in the `example` folder.
-    - `playarrow` simplest example of rendering an icon, [see below](#example-playarrow).
-    - `actioninfo` generate an icon on the fly, render it and cache the result, [see below](#example-actioninfo).
-    - The following examples allow you to see rendering and speed differences between rasterizers by clicking on the image to switch rasterizer. 
-        - `icons` renders golang.org/x/exp/shiny/materialdesign/icons. [see below](#example-icons).
-        - `favicon` vector image with several blended layers. [see below](#example-favicon).
-        - `cowbell` vector image with several blended layers including gradients. [see below](#example-cowbell).
-        - `gradients` vector image with lots of gradients. [see below](#example-gradients).
+12. Create examples in directory `raster/gio/example`.
+    - `playarrow` simplest example of rendering an icon.
+    - `actioninfo` generate an icon on the fly, render it and cache the result.
+    - The following examples allow you to see rendering and speed differences between rasterizers by clicking on the image to switch rasterizer.
+        - `icons` renders golang.org/x/exp/shiny/materialdesign/icons.
+        - `favicon` vector image with several blended layers.
+        - `cowbell` vector image with several blended layers including gradients.
+        - `gradients` vector image with lots of gradients.
 
 ## Acknowledgement
 
