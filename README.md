@@ -4,13 +4,11 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/reactivego/ivg.svg)](https://pkg.go.dev/github.com/reactivego/ivg#section-documentation)
 
-Package `ivg` provides rendering of [IconVG](https://github.com/google/iconvg) icons using a Rasterizer interface.
-IconVG is a binary format for simple vector graphic icons.
+Package `ivg` provides a powerful implementation for rendering [IconVG](https://github.com/google/iconvg) icons through a flexible Rasterizer interface. IconVG is an efficient binary format designed specifically for vector graphic icons.
 
-The original [IconVG](https://golang.org/x/exp/shiny/iconvg) code was changed to render an IconVG graphic using a vector graphics Rasterizer interface. The original code rendered to a bitmap image.
-The use of the rasterizer allows implementing different rasterizers for different purposes. For example, a rasterizer that renders to a bitmap image, or a rasterizer that renders to a gioui.org context.
+This package enhances the original [IconVG](https://golang.org/x/exp/shiny/iconvg) implementation by introducing a modular vector graphics Rasterizer interface, replacing the original bitmap-only rendering system. This architectural change enables diverse rendering capabilities through different rasterizer implementations. Users can now choose between various output targets, such as bitmap images or gioui.org contexts, by implementing the appropriate rasterizer for their needs.
 
-The name of the `iconvg` package has been changed to `ivg` so we don't confuse people about what's what.
+To maintain clarity and avoid namespace confusion with the original implementation, this package has been renamed from `iconvg` to `ivg`.
 
 ## File Format Versions
 
