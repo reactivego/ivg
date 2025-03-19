@@ -75,9 +75,9 @@ func Icons() {
 				var widget layout.Widget
 				switch backend {
 				case "Gio":
-					widget, _ = raster.Icon(ico.data, 48, 48, raster.WithColors(colornames.LightBlue600))
+					widget, _ = raster.Widget(ico.data, 48, 48, raster.WithColors(colornames.LightBlue600))
 				case "Img":
-					widget, _ = raster.Icon(ico.data, 48, 48, raster.WithColors(colornames.LightBlue600), raster.WithImageBackend())
+					widget, _ = raster.Widget(ico.data, 48, 48, raster.WithColors(colornames.LightBlue600), raster.WithImageBackend())
 				}
 				widget(gtx)
 

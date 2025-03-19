@@ -75,9 +75,9 @@ func FavIcon() {
 				var widget layout.Widget
 				switch backend {
 				case "Gio":
-					widget, _ = raster.Icon(data, 48, 48)
+					widget, _ = raster.Widget(data, 48, 48)
 				case "Img":
-					widget, _ = raster.Icon(data, 48, 48, raster.WithImageBackend())
+					widget, _ = raster.Widget(data, 48, 48, raster.WithImageBackend())
 				}
 				widget(gtx)
 				msg := fmt.Sprintf("%s (%v)", backend, time.Since(start).Round(time.Microsecond))

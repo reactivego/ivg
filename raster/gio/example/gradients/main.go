@@ -72,14 +72,14 @@ func Gradients() {
 				size := gtx.Constraints.Max
 				paint.FillShape(ops, grey300, clip.Rect(image.Rectangle{Max: size}).Op())
 				start := time.Now()
-				var icon layout.Widget
+				var widget layout.Widget
 				switch backend {
 				case "Gio":
-					icon, _ = raster.Icon(data, 48, 48)
+					widget, _ = raster.Widget(data, 48, 48)
 				case "Img":
-					icon, _ = raster.Icon(data, 48, 48, raster.WithImageBackend())
+					widget, _ = raster.Widget(data, 48, 48, raster.WithImageBackend())
 				}
-				icon(gtx)
+				widget(gtx)
 				msg := fmt.Sprintf("%s (%v)", backend, time.Since(start).Round(time.Microsecond))
 				text := gio.Text(shaper, style.H5, 0.0, 0.0, black, msg)
 				text(gtx)

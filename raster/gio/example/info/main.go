@@ -36,7 +36,7 @@ func Info() {
 
 	blue := color.NRGBA{0x21, 0x96, 0xf3, 0xff}
 
-	widget, err := raster.Icon(data, 48, 48, raster.WithColors(blue))
+	widget, err := raster.Widget(data, 48, 48, raster.WithColors(blue))
 	if err != nil {
 		log.Fatal(err)
 	}

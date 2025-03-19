@@ -25,7 +25,7 @@ func Arrow() {
 		app.Title("IVG - Arrow"),
 		app.Size(768, 768),
 	)
-	widget, err := raster.Icon(AVPlayArrow, 48, 48, raster.WithColors(Amber400))
+	widget, err := raster.Widget(AVPlayArrow, 48, 48, raster.WithColors(Amber400))
 	if err != nil {
 		log.Fatal(err)
 	}
