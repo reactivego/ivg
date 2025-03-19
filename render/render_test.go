@@ -7,14 +7,14 @@ import (
 	"testing"
 
 	"github.com/reactivego/ivg"
-	"github.com/reactivego/ivg/raster/vec"
+	"github.com/reactivego/ivg/raster/img"
 )
 
 func TestInvalidAlphaPremultipliedColor(t *testing.T) {
 	// See http://golang.org/issue/39526 for some discussion.
 
 	dst := image.NewRGBA(image.Rect(0, 0, 1, 1))
-	rasterizer := vec.NewRasterizer(dst)
+	rasterizer := img.NewRasterizer(dst)
 	var z Renderer
 	z.SetRasterizer(rasterizer, dst.Bounds())
 	z.Reset(ivg.ViewBox{MinX: 0.0, MinY: 0.0, MaxX: 1.0, MaxY: 1.0}, ivg.DefaultPalette)

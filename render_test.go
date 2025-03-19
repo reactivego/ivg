@@ -16,7 +16,7 @@ import (
 	"testing"
 
 	"github.com/reactivego/ivg/decode"
-	"github.com/reactivego/ivg/raster/vec"
+	"github.com/reactivego/ivg/raster/img"
 	"github.com/reactivego/ivg/render"
 )
 
@@ -130,7 +130,7 @@ func TestRenderer(t *testing.T) {
 			bounds := image.Rect(0, 0, width, height)
 			got := image.NewRGBA(bounds)
 			var z render.Renderer
-			z.SetRasterizer(&vec.Rasterizer{Dst: got, DrawOp: draw.Src}, got.Bounds())
+			z.SetRasterizer(&img.Rasterizer{Dst: got, DrawOp: draw.Src}, got.Bounds())
 			if err := decode.Decode(&z, ivgData, opts...); err != nil {
 				t.Errorf("%s %q variant: Decode: %v", tc.filename, variant, err)
 				continue

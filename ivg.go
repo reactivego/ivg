@@ -167,17 +167,3 @@ var DefaultMetadata = Metadata{
 	ViewBox: DefaultViewBox,
 	Palette: DefaultPalette,
 }
-
-// Icon is an interface to an icon that can be drawn on a Destination
-type Icon interface {
-	// Name is a unique name of the icon inside your program. e.g. "favicon"
-	// It is used to differentiate it from other icons in your program.
-	Name() string
-
-	// ViewBox is the ViewBox of the icon.
-	ViewBox() ViewBox
-
-	// RenderOn is called to let the icon render itself on
-	// a Destination with a list of color.Color overrides.
-	RenderOn(dst Destination, col ...color.Color) error
-}
