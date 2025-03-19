@@ -14,12 +14,6 @@ type option struct {
 	Colors []color.Color
 }
 
-func WithClipRasterizer() Option {
-	return func(o *option) {
-		o.Icon = Clip
-	}
-}
-
 func WithVecRasterizer() Option {
 	return func(o *option) {
 		o.Icon = Vec
